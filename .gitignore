@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build outputs
+target/
+.anchor/
+frontend/.next/
+frontend/out/
+backend/dist/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+frontend/.env.local
+backend/.env
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage/
+
+# Arweave wallet (NEVER commit)
+arweave-wallet.json
+*.jwk
+
+# Solana keypair (NEVER commit)
+*.json.keypair
+id.json
+
+# Vercel
+.vercel

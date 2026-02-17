@@ -1,0 +1,348 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   LEGACYX — Global Design Tokens & Custom Styles
+   Aesthetic: Refined Dark Luxury — obsidian and gold — serious, permanent
+   ============================================================================ */
+
+/* --- Google Fonts Import --- */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Serif+Display&family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* --- CSS Custom Properties (Design Tokens) --- */
+:root {
+  --bg-base: #0A0A08;
+  --surface: #111110;
+  --surface-raised: #1A1A18;
+  --text-primary: #F0EDE6;
+  --text-secondary: #8A8880;
+  --gold: #C9A96E;
+  --amber: #D4782A;
+  --red: #C0392B;
+  --green: #4A9B6F;
+  --border: #2A2A28;
+  --gold-glow: rgba(201, 169, 110, 0.08);
+  --gold-hover: rgba(201, 169, 110, 0.15);
+
+  /* Typography */
+  --font-display: 'Playfair Display', serif;
+  --font-heading: 'DM Serif Display', serif;
+  --font-body: 'Sora', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* --- Base Styles --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-base);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* --- Film Grain Overlay (3% opacity on ALL pages) --- */
+body::after {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  animation: grain 8s steps(10) infinite;
+}
+
+/* --- Custom Cursor (desktop only) --- */
+@media (pointer: fine) {
+  * {
+    cursor: none !important;
+  }
+
+  .custom-cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99999;
+    transition: width 0.2s ease-out, height 0.2s ease-out, border-width 0.2s ease-out,
+      background-color 0.2s ease-out, transform 0.15s ease-out;
+    transform: translate(-50%, -50%);
+    mix-blend-mode: difference;
+  }
+
+  .custom-cursor.hovering {
+    width: 32px;
+    height: 32px;
+    border-width: 2px;
+    background-color: rgba(201, 169, 110, 0.15);
+  }
+}
+
+/* --- Topographic Background Pattern (hero sections) --- */
+.topo-bg {
+  position: relative;
+}
+
+.topo-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 10c22 0 40 18 40 40s-18 40-40 40S10 72 10 50 28 10 50 10zm0 10c-16.5 0-30 13.5-30 30s13.5 30 30 30 30-13.5 30-30-13.5-30-30-30zm0 10c11 0 20 9 20 20s-9 20-20 20-20-9-20-20 9-20 20-20z' fill='none' stroke='%23C9A96E' stroke-width='0.5'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* --- Selection Color --- */
+::selection {
+  background-color: rgba(201, 169, 110, 0.3);
+  color: var(--text-primary);
+}
+
+/* --- Scrollbar Styling --- */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
+}
+
+/* --- Gold Shimmer Border Animation --- */
+.shimmer-border {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-border::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(201, 169, 110, 0) 0%,
+    rgba(201, 169, 110, 0.3) 50%,
+    rgba(201, 169, 110, 0) 100%
+  );
+  background-size: 100% 200%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 1px;
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+/* --- Hover Gold Glow (all interactive elements) --- */
+.gold-hover-glow {
+  transition: box-shadow 0.2s ease-out;
+}
+
+.gold-hover-glow:hover {
+  box-shadow: 0 0 40px rgba(201, 169, 110, 0.08);
+}
+
+/* --- Button Styles --- */
+.btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 32px;
+  background-color: var(--gold);
+  color: var(--bg-base);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.2s ease-out;
+}
+
+.btn-gold:hover {
+  box-shadow: 0 0 60px rgba(201, 169, 110, 0.2);
+  transform: translateY(-1px);
+}
+
+.btn-gold:active {
+  transform: translateY(0);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 32px;
+  background-color: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: all 0.2s ease-out;
+}
+
+.btn-ghost:hover {
+  border-color: var(--gold);
+  box-shadow: 0 0 40px rgba(201, 169, 110, 0.08);
+}
+
+/* --- Card Styles --- */
+.vault-card {
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.3s ease-out;
+}
+
+.vault-card:hover {
+  border-color: rgba(201, 169, 110, 0.2);
+  box-shadow: 0 0 40px rgba(201, 169, 110, 0.05);
+}
+
+/* --- Certificate Card 3D Transform --- */
+.certificate-card {
+  perspective: 1000px;
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+}
+
+.certificate-card:hover {
+  transform: translateY(-4px) rotateX(2deg) rotateY(-2deg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 40px rgba(201, 169, 110, 0.1);
+}
+
+/* --- Typewriter Effect --- */
+.typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid var(--gold);
+  animation: typewriter 1s steps(44) forwards, blink-caret 0.75s step-end infinite;
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent; }
+  50% { border-color: var(--gold); }
+}
+
+/* --- Dashed Border Animation (Upload Zone) --- */
+.dash-border {
+  background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='12' ry='12' stroke='%23C9A96E' stroke-width='2' stroke-dasharray='8%2c 8' stroke-dashoffset='0' stroke-linecap='round'/%3e%3c/svg%3e");
+  border-radius: 12px;
+}
+
+/* --- Waveform Visualization --- */
+.waveform-bar {
+  display: inline-block;
+  width: 3px;
+  margin: 0 1px;
+  background-color: var(--gold);
+  border-radius: 2px;
+  animation: waveform 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes waveform {
+  from { height: 4px; }
+  to { height: var(--wave-height, 20px); }
+}
+
+/* --- Number Morphing Container --- */
+.number-morph {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.number-morph .digit {
+  display: inline-block;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --- Page Transition Gold Line --- */
+.page-transition-line {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--amber));
+  z-index: 99998;
+}
+
+/* --- Utility Classes --- */
+.text-balance {
+  text-wrap: balance;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* --- Focus Styles --- */
+*:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* --- Lenis Smooth Scroll --- */
+html.lenis {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
