@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import { PublicKey } from '@solana/web3.js';
@@ -59,9 +59,11 @@ export default function CreateVaultPage() {
   const [sealed, setSealed] = useState(false);
 
   // Auto-advance from step 0 when wallet connects
-  if (connected && currentStep === 0) {
-    setCurrentStep(1);
-  }
+  useEffect(() => {
+    if (connected && currentStep === 0) {
+      setCurrentStep(1);
+    }
+  }, [connected, currentStep]);
 
   // ─── Validation ───────────────────────────────────────────────────────────
 
@@ -138,15 +140,11 @@ export default function CreateVaultPage() {
     setTxProgress(null);
 
     try {
-      // 1. Create vault encryption key
-      if (!hasKey) {
-        await createKey();
-      }
-
-      // 2. Sign auth message
+      // 1. Sign auth message (Phantom popup #1)
+      setTxProgress({ status: 'building' });
       const { signature, message } = await signAuthMessage(signMessage, 'Create Vault');
 
-      // 3. Filter valid heir and guardian addresses
+      // 2. Filter valid heir and guardian addresses
       const validHeirs = heirs
         .filter((h) => {
           try { new PublicKey(h.address); return true; } catch { return false; }
@@ -157,11 +155,11 @@ export default function CreateVaultPage() {
         try { new PublicKey(a); return true; } catch { return false; }
       });
 
-      // 4. Get unsigned transaction from backend
+      // 3. Get unsigned transaction from backend
       const result = await vaultApi.create({
         ownerPubkey: publicKey.toBase58(),
         vaultName,
-        checkInInterval: checkInDays,
+        checkInInterval: checkInDays * 24 * 60 * 60, // Convert days to seconds
         heirPubkeys: validHeirs,
         guardianPubkeys: validGuardians,
         recoveryThreshold: Math.min(recoveryThreshold, validGuardians.length),
@@ -169,9 +167,10 @@ export default function CreateVaultPage() {
         message,
       });
 
-      // 5. Sign and send the transaction
+      // 4. Sign and send the transaction (Phantom popup #2)
       const txSig = await signAndSendTransaction(result.transaction, signTransaction, setTxProgress);
       setTxSignature(txSig);
+
       setSealed(true);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Vault creation failed';
@@ -615,12 +614,14 @@ export default function CreateVaultPage() {
                       >
                         {sealing
                           ? txProgress?.status === 'signing'
-                            ? 'Signing in Phantom...'
+                            ? 'Approve in Phantom...'
                             : txProgress?.status === 'sending'
                               ? 'Sending to Solana...'
                               : txProgress?.status === 'confirming'
-                                ? 'Confirming...'
-                                : 'Building Transaction...'
+                                ? 'Confirming on-chain...'
+                                : txProgress?.status === 'building'
+                                  ? 'Approve Signature in Phantom...'
+                                  : 'Preparing...'
                           : 'Seal Vault on Solana'}
                       </button>
 

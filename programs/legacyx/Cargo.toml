@@ -14,8 +14,10 @@ no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
 default = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 
 [dependencies]
-anchor-lang = "0.30.0"
+anchor-lang = { version = "0.30.0", features = ["init-if-needed"] }
 anchor-spl = "0.30.0"
-spl-token = "4.0.0"
+constant_time_eq = "=0.3.1"
+blake3 = "=1.5.5"

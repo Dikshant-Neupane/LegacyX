@@ -1,24 +1,38 @@
 'use client';
 
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import { useCallback, useEffect, useRef } from 'react';
 
 export function ConnectWalletButton() {
-  const { select, wallets, connect, connecting } = useWallet();
+  const { select, wallets, connect, connecting, wallet } = useWallet();
+  const { setVisible } = useWalletModal();
+  const connectingRef = useRef(false);
 
-  const handleConnect = async () => {
-    // Select Phantom wallet
+  // Auto-connect once a wallet is selected
+  useEffect(() => {
+    if (wallet && !connecting && connectingRef.current) {
+      connectingRef.current = false;
+      connect().catch((err) => {
+        console.error('Wallet connection failed:', err);
+      });
+    }
+  }, [wallet, connecting, connect]);
+
+  const handleConnect = useCallback(async () => {
+    // If Phantom is installed, select it directly
     const phantom = wallets.find(
       (w) => w.adapter.name === 'Phantom'
     );
     if (phantom) {
+      connectingRef.current = true;
       select(phantom.adapter.name);
-      try {
-        await connect();
-      } catch (err) {
-        console.error('Wallet connection failed:', err);
-      }
+      // connect() fires from the useEffect above after wallet is registered
+    } else {
+      // Fallback: show the wallet modal
+      setVisible(true);
     }
-  };
+  }, [wallets, select, setVisible]);
 
   return (
     <button

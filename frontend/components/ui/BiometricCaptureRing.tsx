@@ -1,13 +1,10 @@
-set CARGO_TARGET_DIR=C:\Users\DIKSHA~1\Documents\cargo-build-tmp
-cargo install --git https://github.com/coral-xyz/anchor --tag v0.30.0 anchor-cli --force'use client';
+'use client';
 
 import { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 interface BiometricCaptureRingProps {
-  /** Whether capture is in progress */cd "C:\Users\Dikshant Neupane\Documents\LegacyX"
-set PATH=%USERPROFILE%\.local\share\solana\install\active_release\bin;%PATH%
-anchor build
+  /** Whether capture is in progress */
   capturing: boolean;
   /** Type of biometric being captured */
   type: 'face' | 'voice';

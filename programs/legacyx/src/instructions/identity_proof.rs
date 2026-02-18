@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 use crate::state::IdentityProof;
-use crate::errors::LegacyXError;
 use crate::events::IdentityProofAnchored;
 
 /// # Identity Proof

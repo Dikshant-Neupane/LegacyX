@@ -22,7 +22,7 @@ const VaultOrb = dynamic(
 function computeDaysRemaining(lastCheckIn: number, checkInInterval: number): number {
   const now = Math.floor(Date.now() / 1000);
   const elapsed = now - lastCheckIn;
-  const remaining = checkInInterval * 86400 - elapsed;
+  const remaining = checkInInterval - elapsed; // checkInInterval is already in seconds
   return Math.max(0, Math.ceil(remaining / 86400));
 }
 

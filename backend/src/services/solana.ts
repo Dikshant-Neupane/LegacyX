@@ -16,7 +16,7 @@ import { VaultData } from '../types';
 // ============================================================================
 
 const PROGRAM_ID = new PublicKey(
-  process.env.PROGRAM_ID || 'LGCYxV1111111111111111111111111111111111111',
+  process.env.PROGRAM_ID || '8fKi12rubJcmMfGRZErHpmM4sbhCyq7cTTPyS9aPoK4Z',
 );
 
 const RPC_ENDPOINTS = [
@@ -174,7 +174,7 @@ function deserializeVaultAccount(data: Buffer, vaultPubkey: string): VaultData |
     offset += 8;
 
     const statusByte = data.readUInt8(offset);
-    offset += 2; // enum byte + padding
+    offset += 1; // Borsh enum: single byte, no padding
     const status = VAULT_STATUS_MAP[statusByte] || 'Active';
 
     const cidLen = data.readUInt32LE(offset);

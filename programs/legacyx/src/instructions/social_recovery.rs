@@ -20,8 +20,8 @@ use crate::events::{SocialRecoveryInitiated, SocialRecoveryCompleted};
 /// - Already signed: `GuardianAlreadySigned`
 /// - Proposed new owner is current owner: `NewOwnerIsCurrent`
 /// - Threshold not reached: instruction succeeds but transfer deferred
-pub fn handle_social_recovery(
-    ctx: Context<SocialRecovery>,
+pub fn handle_social_recovery<'info>(
+    ctx: Context<'_, '_, 'info, 'info, SocialRecovery<'info>>,
     proposed_new_owner: Pubkey,
 ) -> Result<()> {
     let vault = &mut ctx.accounts.vault;

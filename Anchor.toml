@@ -3,7 +3,7 @@ seeds = false
 skip-lint = false
 
 [programs.devnet]
-legacyx = "LGCYxV1111111111111111111111111111111111111"
+legacyx = "8fKi12rubJcmMfGRZErHpmM4sbhCyq7cTTPyS9aPoK4Z"
 
 [registry]
 url = "https://api.apr.dev"

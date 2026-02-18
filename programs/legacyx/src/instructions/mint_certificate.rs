@@ -62,14 +62,8 @@ pub struct MintCertificate<'info> {
     /// The mint account for the certificate NFT.
     /// CHECK: Will be initialized via CPI to Token-2022 in production.
     /// For MVP, we just store the key.
-    #[account(
-        init,
-        payer = owner,
-        space = 82, // Minimum mint account size
-        seeds = [b"certificate", vault.key().as_ref()],
-        bump
-    )]
-    pub certificate_mint: AccountInfo<'info>,
+    #[account(mut)]
+    pub certificate_mint: Signer<'info>,
 
     pub system_program: Program<'info, System>,
 }

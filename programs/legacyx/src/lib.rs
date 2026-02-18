@@ -7,7 +7,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("LGCYxV1111111111111111111111111111111111111");
+declare_id!("8fKi12rubJcmMfGRZErHpmM4sbhCyq7cTTPyS9aPoK4Z");
 
 #[program]
 pub mod legacyx {
@@ -75,8 +75,8 @@ pub mod legacyx {
 
     /// Guardian signs for social recovery. M-of-N threshold transfers ownership.
     /// Emits: SocialRecoveryInitiated, SocialRecoveryCompleted (if threshold met)
-    pub fn social_recovery(
-        ctx: Context<SocialRecovery>,
+    pub fn social_recovery<'info>(
+        ctx: Context<'_, '_, 'info, 'info, SocialRecovery<'info>>,
         proposed_new_owner: Pubkey,
     ) -> Result<()> {
         instructions::social_recovery::handle_social_recovery(ctx, proposed_new_owner)

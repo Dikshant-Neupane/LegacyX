@@ -21,7 +21,7 @@ export function Providers({ children }: { children: ReactNode }) {
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
+    <ConnectionProvider endpoint={endpoint} config={{ commitment: 'confirmed', disableRetryOnRateLimit: false }}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           <LenisProvider>{children}</LenisProvider>

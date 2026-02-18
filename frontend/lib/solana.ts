@@ -10,7 +10,7 @@ import { PublicKey, SystemProgram, Connection, Transaction } from '@solana/web3.
 // ─── Program Constants ────────────────────────────────────────────────────────
 
 export const LEGACYX_PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_PROGRAM_ID || 'LGCYxV1111111111111111111111111111111111111'
+  process.env.NEXT_PUBLIC_PROGRAM_ID || '8fKi12rubJcmMfGRZErHpmM4sbhCyq7cTTPyS9aPoK4Z'
 );
 
 export const DEVNET_RPC = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
