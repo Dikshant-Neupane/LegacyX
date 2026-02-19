@@ -563,11 +563,11 @@ export default function CreateVaultPage() {
                       </div>
 
                       <button
-                        onClick={() => router.push('/dashboard')}
+                        onClick={() => router.push('/vault')}
                         className="btn-gold"
                         data-interactive
                       >
-                        Go to Dashboard
+                        Go to Your Vault
                       </button>
                     </motion.div>
                   ) : (

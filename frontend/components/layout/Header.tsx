@@ -4,9 +4,17 @@ import Link from 'next/link';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletAddress } from '@/components/wallet/WalletAddress';
 import { ConnectWalletButton } from '@/components/wallet/ConnectWalletButton';
+import { useVault } from '@/hooks/useVault';
 
 export function Header() {
   const { connected } = useWallet();
+  const { hasVault, loading, error } = useVault();
+
+  // Show "Your Vault" link when:
+  // - vault is confirmed (hasVault)
+  // - still loading (we don't know yet)
+  // - error occurred (backend down — we can't confirm, so keep the link)
+  const showVaultLink = hasVault || loading || !!error;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[100] backdrop-blur-sm bg-vault-bg/80 border-b border-vault-border">
@@ -24,13 +32,15 @@ export function Header() {
         <nav className="hidden md:flex items-center gap-8">
           {connected && (
             <>
-              <Link
-                href="/dashboard"
-                className="text-sm text-vault-muted hover:text-vault-text transition-colors"
-                data-interactive
-              >
-                Dashboard
-              </Link>
+              {showVaultLink && (
+                <Link
+                  href="/vault"
+                  className={`text-sm transition-colors ${loading ? 'text-vault-muted/50' : 'text-vault-muted hover:text-vault-text'}`}
+                  data-interactive
+                >
+                  Your Vault
+                </Link>
+              )}
               <Link
                 href="/vault/create"
                 className="text-sm text-vault-muted hover:text-vault-text transition-colors"

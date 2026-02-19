@@ -1,8 +1,16 @@
 'use client';
 
 import Link from 'next/link';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useVault } from '@/hooks/useVault';
 
 export function Footer() {
+  const { connected } = useWallet();
+  const { hasVault, loading, error } = useVault();
+
+  // Show vault link when confirmed, loading, or if there was an error (can't confirm absence)
+  const showVaultLink = hasVault || loading || !!error;
+
   return (
     <footer className="border-t border-vault-border py-8 px-6">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -20,13 +28,15 @@ export function Footer() {
           >
             Home
           </Link>
-          <Link
-            href="/dashboard"
-            className="text-sm text-vault-muted hover:text-vault-text transition-colors"
-            data-interactive
-          >
-            Dashboard
-          </Link>
+          {connected && showVaultLink && (
+            <Link
+              href="/vault"
+              className={`text-sm transition-colors ${loading ? 'text-vault-muted/50' : 'text-vault-muted hover:text-vault-text'}`}
+              data-interactive
+            >
+              Your Vault
+            </Link>
+          )}
           <Link
             href="/vault/create"
             className="text-sm text-vault-muted hover:text-vault-text transition-colors"

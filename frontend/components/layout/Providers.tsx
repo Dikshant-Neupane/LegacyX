@@ -9,6 +9,7 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
 import { clusterApiUrl } from '@solana/web3.js';
 import { LenisProvider } from '@/components/layout/LenisProvider';
+import { VaultProvider } from '@/contexts/VaultContext';
 
 export function Providers({ children }: { children: ReactNode }) {
   const endpoint = useMemo(
@@ -24,7 +25,9 @@ export function Providers({ children }: { children: ReactNode }) {
     <ConnectionProvider endpoint={endpoint} config={{ commitment: 'confirmed', disableRetryOnRateLimit: false }}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
-          <LenisProvider>{children}</LenisProvider>
+          <VaultProvider>
+            <LenisProvider>{children}</LenisProvider>
+          </VaultProvider>
         </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
