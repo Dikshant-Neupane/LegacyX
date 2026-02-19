@@ -44,3 +44,9 @@ id.json
 
 # Vercel
 .vercel
+
+# Solana build artifacts (large binaries)
+release/
+sbf-solana-solana/
+solana-install-init.exe
+.rustc_info.json

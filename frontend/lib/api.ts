@@ -66,8 +66,8 @@ export async function signAuthMessage(
 function uint8ToBase58(bytes: Uint8Array): string {
   const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
   let num = BigInt(0);
-  for (const byte of bytes) {
-    num = num * BigInt(256) + BigInt(byte);
+  for (let i = 0; i < bytes.length; i++) {
+    num = num * BigInt(256) + BigInt(bytes[i]);
   }
   let encoded = '';
   while (num > BigInt(0)) {
@@ -76,8 +76,8 @@ function uint8ToBase58(bytes: Uint8Array): string {
     encoded = ALPHABET[Number(remainder)] + encoded;
   }
   // Add leading '1' for each leading zero byte
-  for (const byte of bytes) {
-    if (byte === 0) encoded = '1' + encoded;
+  for (let i = 0; i < bytes.length; i++) {
+    if (bytes[i] === 0) encoded = '1' + encoded;
     else break;
   }
   return encoded;

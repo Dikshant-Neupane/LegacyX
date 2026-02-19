@@ -99,8 +99,8 @@ export function useEncryption(): UseEncryptionReturn {
         setEncrypting(false);
         setUploading(true);
 
-        // 2. Convert encrypted blob to base64 for transport
-        const encryptedBase64 = bufferToBase64(encrypted.ciphertext);
+        // 2. Encrypted blob is already base64-encoded
+        const encryptedBase64 = encrypted.data;
 
         // 3. Sign auth message
         const { signature, message } = await signAuthMessage(signMessage, 'Upload');
@@ -150,8 +150,8 @@ export function useEncryption(): UseEncryptionReturn {
         setEncrypting(false);
         setUploading(true);
 
-        // 2. Convert to base64
-        const encryptedBase64 = bufferToBase64(encrypted.ciphertext);
+        // 2. Encrypted blob is already base64-encoded
+        const encryptedBase64 = encrypted.data;
 
         // 3. Sign auth
         const { signature, message } = await signAuthMessage(signMessage, 'Upload');
@@ -193,13 +193,4 @@ export function useEncryption(): UseEncryptionReturn {
     uploading,
     txProgress,
   };
-}
-
-function bufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
 }

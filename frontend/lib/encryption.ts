@@ -53,7 +53,7 @@ export async function deriveVaultKey(
   // Import signature as raw key material for HKDF
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
-    signatureBytes,
+    signatureBytes as BufferSource,
     'HKDF',
     false,
     ['deriveKey']
@@ -64,8 +64,8 @@ export async function deriveVaultKey(
     {
       name: 'HKDF',
       hash: 'SHA-256',
-      salt,
-      info: HKDF_INFO,
+      salt: salt as BufferSource,
+      info: HKDF_INFO as BufferSource,
     },
     keyMaterial,
     { name: ALGORITHM, length: KEY_LENGTH },
@@ -110,14 +110,14 @@ export async function encrypt(
   const salt = generateSalt();
 
   // Compute integrity hash before encryption
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data as BufferSource);
   const plaintextHash = arrayBufferToHex(hashBuffer);
 
   // Encrypt
   const ciphertext = await crypto.subtle.encrypt(
-    { name: ALGORITHM, iv },
+    { name: ALGORITHM, iv: iv as BufferSource },
     key,
-    data
+    data as BufferSource
   );
 
   return { ciphertext, iv, salt, plaintextHash };
@@ -135,7 +135,7 @@ export async function decrypt(
   payload: EncryptedPayload
 ): Promise<ArrayBuffer> {
   const plaintext = await crypto.subtle.decrypt(
-    { name: ALGORITHM, iv: payload.iv },
+    { name: ALGORITHM, iv: payload.iv as BufferSource },
     key,
     payload.ciphertext
   );
@@ -269,6 +269,6 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 export async function sha256Hash(data: ArrayBuffer | string): Promise<string> {
   const buffer =
     typeof data === 'string' ? new TextEncoder().encode(data) : data;
-  const hash = await crypto.subtle.digest('SHA-256', buffer);
+  const hash = await crypto.subtle.digest('SHA-256', buffer as BufferSource);
   return arrayBufferToHex(hash);
 }

@@ -1,0 +1,37 @@
+# ─── Vercel Ignore ─────────────────────────────────────────────────────────
+# Skip files that aren't needed for the Next.js frontend build.
+
+# Rust / Solana build artifacts
+target/
+release/
+sbf-solana-solana/
+programs/
+migrations/
+*.exe
+Cargo.toml
+Cargo.lock
+Anchor.toml
+.rustc_info.json
+
+# Backend (deployed separately)
+backend/
+
+# Mobile app
+mobile/
+
+# Tests (not needed for deployment)
+tests/
+
+# Documentation
+docs/
+*.md
+!frontend/README.md
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Shell scripts
+*.sh
