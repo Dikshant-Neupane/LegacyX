@@ -1,9 +1,9 @@
 // ============================================================================
-// LEGACYX API CLIENT — Frontend HTTP client for backend routes
+// LEGACYX API CLIENT — Frontend HTTP client for API routes
 // All requests go through this module for centralized error handling.
 // ============================================================================
 
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001/api';
+const API_BASE = '/api';
 
 interface ApiResponse<T = unknown> {
   success: boolean;
