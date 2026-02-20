@@ -58,6 +58,25 @@ export default function CreateVaultPage() {
   const [sealing, setSealing] = useState(false);
   const [sealed, setSealed] = useState(false);
 
+  // Check if wallet already has a vault (limit 1 per wallet)
+  const [hasExistingVault, setHasExistingVault] = useState(false);
+  const [existingVaultName, setExistingVaultName] = useState('');
+
+  useEffect(() => {
+    if (publicKey) {
+      const walletKey = publicKey.toBase58();
+      const drafts = JSON.parse(localStorage.getItem('vault_drafts') || '[]');
+      const existing = drafts.find((d: any) => d.walletAddress === walletKey);
+      if (existing) {
+        setHasExistingVault(true);
+        setExistingVaultName(existing.vaultName);
+      } else {
+        setHasExistingVault(false);
+        setExistingVaultName('');
+      }
+    }
+  }, [publicKey, sealed]);
+
   // Auto-advance from step 0 when wallet connects
   useEffect(() => {
     if (connected && currentStep === 0) {
@@ -67,17 +86,10 @@ export default function CreateVaultPage() {
 
   // ─── Validation ───────────────────────────────────────────────────────────
 
-  const isStep1Valid = vaultName.trim().length >= 3 && checkInDays >= 7;
+  const isStep1Valid = vaultName.trim().length >= 2 && checkInDays >= 7;
 
-  const isStep2Valid =
-    heirs.some((h) => {
-      try {
-        new PublicKey(h.address);
-        return true;
-      } catch {
-        return false;
-      }
-    });
+  // Heirs: just require at least one with a non-empty address
+  const isStep2Valid = heirs.some((h) => h.address.trim().length > 0);
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
@@ -133,49 +145,43 @@ export default function CreateVaultPage() {
     }
   };
 
-  const handleSealVault = async () => {
-    if (!publicKey || !signMessage || !signTransaction) return;
+  const handleSaveVaultDraft = async () => {
     setSealing(true);
     setSealError(null);
-    setTxProgress(null);
 
     try {
-      // 1. Sign auth message (Phantom popup #1)
-      setTxProgress({ status: 'building' });
-      const { signature, message } = await signAuthMessage(signMessage, 'Create Vault');
-
-      // 2. Filter valid heir and guardian addresses
+      // Save vault configuration as a draft
       const validHeirs = heirs
-        .filter((h) => {
-          try { new PublicKey(h.address); return true; } catch { return false; }
-        })
-        .map((h) => h.address);
+        .filter((h) => h.address.trim())
+        .map((h) => ({ name: h.label || 'Heir', email: '', relationship: 'heir', address: h.address }));
 
-      const validGuardians = guardianAddresses.filter((a) => {
-        try { new PublicKey(a); return true; } catch { return false; }
-      });
+      const validGuardians = guardianAddresses.filter(Boolean);
 
-      // 3. Get unsigned transaction from backend
-      const result = await vaultApi.create({
-        ownerPubkey: publicKey.toBase58(),
+      // Store in localStorage keyed to wallet (1 vault per wallet)
+      const walletKey = publicKey?.toBase58() || 'unknown';
+      const vaultDraft = {
+        id: Date.now().toString(),
+        walletAddress: walletKey,
         vaultName,
-        checkInInterval: checkInDays * 24 * 60 * 60, // Convert days to seconds
-        heirPubkeys: validHeirs,
-        guardianPubkeys: validGuardians,
+        checkInDays,
+        heirs: validHeirs,
+        guardians: validGuardians,
         recoveryThreshold: Math.min(recoveryThreshold, validGuardians.length),
-        signature,
-        message,
-      });
+        status: 'draft',
+        createdAt: new Date().toISOString(),
+      };
 
-      // 4. Sign and send the transaction (Phantom popup #2)
-      const txSig = await signAndSendTransaction(result.transaction, signTransaction, setTxProgress);
-      setTxSignature(txSig);
+      // Replace any existing vault for this wallet, or add new
+      const existing = JSON.parse(localStorage.getItem('vault_drafts') || '[]');
+      const filtered = existing.filter((d: any) => d.walletAddress !== walletKey);
+      filtered.push(vaultDraft);
+      localStorage.setItem('vault_drafts', JSON.stringify(filtered));
 
       setSealed(true);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Vault creation failed';
+      const msg = err instanceof Error ? err.message : 'Failed to save vault';
       setSealError(msg);
-      console.error('Vault creation failed:', err);
+      console.error('Vault save failed:', err);
     } finally {
       setSealing(false);
     }
@@ -200,6 +206,34 @@ export default function CreateVaultPage() {
           </h1>
         </motion.div>
 
+        {/* Already has a vault */}
+        {hasExistingVault && !sealed && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="vault-card p-8 text-center mb-12"
+          >
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full border-2 border-vault-gold/40 flex items-center justify-center">
+              <span className="text-vault-gold text-2xl">✦</span>
+            </div>
+            <h2 className="font-heading text-xl text-vault-text mb-2">You Already Have a Vault</h2>
+            <p className="text-vault-muted text-sm mb-2">
+              Your wallet already has a vault: <strong className="text-vault-gold">&quot;{existingVaultName}&quot;</strong>
+            </p>
+            <p className="text-vault-muted text-xs mb-6">
+              Each wallet can create one vault. You can view your existing vault from the dashboard.
+            </p>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="btn-gold"
+              data-interactive
+            >
+              Go to Dashboard
+            </button>
+          </motion.div>
+        )}
+
+        {!hasExistingVault && (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
           {/* Left — Timeline */}
           <motion.div
@@ -313,7 +347,7 @@ export default function CreateVaultPage() {
                               onChange={(e) =>
                                 updateHeir(i, 'address', e.target.value)
                               }
-                              placeholder="Solana wallet address"
+                              placeholder="Wallet address or identifier"
                               className="flex-1 bg-vault-surface border border-vault-border rounded-lg px-4 py-3 text-vault-text font-mono text-xs focus:outline-none focus:border-vault-gold/50 transition-colors"
                             />
                             <input
@@ -364,7 +398,7 @@ export default function CreateVaultPage() {
                               updated[i] = e.target.value;
                               setGuardianAddresses(updated);
                             }}
-                            placeholder="Guardian wallet address"
+                            placeholder="Guardian wallet address or identifier"
                             className="w-full bg-vault-surface border border-vault-border rounded-lg px-4 py-3 text-vault-text font-mono text-xs focus:outline-none focus:border-vault-gold/50 transition-colors"
                           />
                         ))}
@@ -537,9 +571,9 @@ export default function CreateVaultPage() {
                         Vault Sealed
                       </h2>
                       <p className="text-vault-muted text-sm max-w-md mx-auto mb-8">
-                        &quot;{vaultName}&quot; is now live on Solana devnet.
-                        Your legacy is encrypted and only your heirs can access it —
-                        not even us.
+                        &quot;{vaultName}&quot; has been saved.
+                        Your vault configuration is stored and ready for on-chain deployment
+                        when Solana integration goes live.
                       </p>
 
                       {txSignature && (
@@ -563,25 +597,24 @@ export default function CreateVaultPage() {
                       </div>
 
                       <button
-                        onClick={() => router.push('/vault')}
+                        onClick={() => router.push('/dashboard')}
                         className="btn-gold"
                         data-interactive
                       >
-                        Go to Your Vault
+                        Go to Dashboard
                       </button>
                     </motion.div>
                   ) : (
                     <div className="text-center py-12">
                       <h2 className="font-heading text-2xl text-vault-text mb-4">
-                        Ready to Seal
+                        Review & Save
                       </h2>
-                      <p className="text-vault-muted text-sm max-w-md mx-auto mb-8">
-                        This will deploy your vault as an immutable smart contract on Solana.
-                        Review your configuration:
+                      <p className="text-vault-muted text-sm max-w-md mx-auto mb-6">
+                        Review your vault configuration below.
                       </p>
 
                       {/* Summary */}
-                      <div className="vault-card max-w-sm mx-auto p-6 text-left mb-8">
+                      <div className="vault-card max-w-sm mx-auto p-6 text-left mb-6">
                         <div className="space-y-3">
                           <div className="flex justify-between">
                             <span className="text-vault-muted text-xs">Name</span>
@@ -606,23 +639,26 @@ export default function CreateVaultPage() {
                         </div>
                       </div>
 
+                      {/* Coming Soon Notice */}
+                      <div className="vault-card max-w-sm mx-auto p-4 mb-6 border-vault-gold/20">
+                        <div className="flex items-center gap-2 mb-2">
+                          <svg className="w-4 h-4 text-vault-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          <span className="text-vault-gold text-xs font-semibold uppercase tracking-wider">Solana Deployment Coming Soon</span>
+                        </div>
+                        <p className="text-vault-muted text-xs leading-relaxed">
+                          On-chain vault sealing will be available in the next release. For now, your vault configuration will be saved as a draft.
+                        </p>
+                      </div>
+
                       <button
-                        onClick={handleSealVault}
+                        onClick={handleSaveVaultDraft}
                         disabled={sealing}
                         className="btn-gold"
                         data-interactive
                       >
-                        {sealing
-                          ? txProgress?.status === 'signing'
-                            ? 'Approve in Phantom...'
-                            : txProgress?.status === 'sending'
-                              ? 'Sending to Solana...'
-                              : txProgress?.status === 'confirming'
-                                ? 'Confirming on-chain...'
-                                : txProgress?.status === 'building'
-                                  ? 'Approve Signature in Phantom...'
-                                  : 'Preparing...'
-                          : 'Seal Vault on Solana'}
+                        {sealing ? 'Saving...' : 'Save Vault Draft'}
                       </button>
 
                       {sealError && (
@@ -635,6 +671,46 @@ export default function CreateVaultPage() {
             </AnimatePresence>
           </div>
         </div>
+        )}
+
+        {/* Disclaimer */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="mt-16 border-t border-vault-border pt-8"
+        >
+          <div className="vault-card p-6 bg-vault-surface/50">
+            <h3 className="text-vault-gold text-xs font-semibold uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Important Disclaimer
+            </h3>
+            <ul className="space-y-2 text-vault-muted text-xs leading-relaxed">
+              <li className="flex items-start gap-2">
+                <span className="text-vault-gold/60 mt-0.5">•</span>
+                <span>Once sealed, your vault is deployed as an <strong className="text-vault-text">immutable smart contract</strong> on the Solana blockchain. This action cannot be undone.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-vault-gold/60 mt-0.5">•</span>
+                <span>You are solely responsible for safeguarding your wallet private keys. <strong className="text-vault-text">Lost keys cannot be recovered</strong> by LegacyX.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-vault-gold/60 mt-0.5">•</span>
+                <span>Ensure all heir and guardian wallet addresses are correct. Incorrect addresses may result in <strong className="text-vault-text">permanent loss of access</strong> to vault contents.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-vault-gold/60 mt-0.5">•</span>
+                <span>LegacyX is provided <strong className="text-vault-text">as-is</strong> without warranty. We are not liable for any loss of funds, data, or digital assets stored in vaults.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-vault-gold/60 mt-0.5">•</span>
+                <span>By creating a vault, you agree to the LegacyX <a href="#" className="text-vault-gold hover:underline">Terms of Service</a> and <a href="#" className="text-vault-gold hover:underline">Privacy Policy</a>.</span>
+              </li>
+            </ul>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

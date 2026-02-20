@@ -10,11 +10,8 @@ export function Header() {
   const { connected } = useWallet();
   const { hasVault, loading, error } = useVault();
 
-  // Show "Your Vault" link when:
-  // - vault is confirmed (hasVault)
-  // - still loading (we don't know yet)
-  // - error occurred (backend down — we can't confirm, so keep the link)
-  const showVaultLink = hasVault || loading || !!error;
+  // Only show "Your Vault" link when vault is confirmed to exist
+  const showVaultLink = hasVault && !loading;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[100] backdrop-blur-sm bg-vault-bg/80 border-b border-vault-border">
@@ -30,6 +27,14 @@ export function Header() {
 
         {/* Navigation */}
         <nav className="hidden md:flex items-center gap-8">
+          {/* MVP Auth Links - always visible */}
+          <Link
+            href="/dashboard"
+            className="text-sm text-vault-muted hover:text-vault-text transition-colors"
+            data-interactive
+          >
+            Dashboard
+          </Link>
           {connected && (
             <>
               {showVaultLink && (

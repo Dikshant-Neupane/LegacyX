@@ -1,350 +1,144 @@
 // ============================================================================
-// LEGACYX API CLIENT — Frontend HTTP client for API routes
-// All requests go through this module for centralized error handling.
+// LEGACYX MVP API CLIENT — Simple HTTP client for auth and legacy management
 // ============================================================================
 
-const API_BASE = '/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-interface ApiResponse<T = unknown> {
-  success: boolean;
-  error?: string;
-  details?: Array<{ field: string; message: string; code: string }>;
-  [key: string]: unknown;
-}
-
-class ApiError extends Error {
-  status: number;
-  details?: Array<{ field: string; message: string; code: string }>;
-
-  constructor(message: string, status: number, details?: Array<{ field: string; message: string; code: string }>) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-    this.details = details;
+class ApiClient {
+  private getToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('token');
   }
-}
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE}${path}`;
-
-  const response = await fetch(url, {
-    headers: {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const token = this.getToken();
+    
+    const headers: HeadersInit = {
       'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
-    },
-    ...options,
-  });
+    };
 
-  const data = await response.json();
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
 
-  if (!response.ok || data.error) {
-    throw new ApiError(
-      data.error || `Request failed with status ${response.status}`,
-      response.status,
-      data.details,
-    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Something went wrong');
+    }
+
+    return data;
   }
 
-  return data as T;
+  // Auth
+  async register(name: string, email: string, password: string) {
+    return this.request('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password }),
+    });
+  }
+
+  async login(email: string, password: string) {
+    return this.request('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  async getMe() {
+    return this.request('/api/auth/me');
+  }
+
+  // Legacy
+  async getLegacies() {
+    return this.request('/api/legacy');
+  }
+
+  async getLegacy(id: string) {
+    return this.request(`/api/legacy/${id}`);
+  }
+
+  async createLegacy(data: {
+    title: string;
+    message: string;
+    beneficiaries?: Array<{ name: string; email: string; relationship?: string }>;
+    triggerDate?: string;
+  }) {
+    return this.request('/api/legacy', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateLegacy(id: string, data: Partial<{
+    title: string;
+    message: string;
+    beneficiaries: Array<{ name: string; email: string; relationship?: string }>;
+    triggerDate: string;
+    status: string;
+  }>) {
+    return this.request(`/api/legacy/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteLegacy(id: string) {
+    return this.request(`/api/legacy/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
-// --- Sign a message with Phantom for auth ---
+export const api = new ApiClient();
+
+// ==========================================================================
+// BACKWARDS COMPATIBILITY STUBS
+// These exports exist only to prevent build errors in existing vault/identity
+// pages. They are not functional in the MVP. Remove when cleaning up for v2.
+// ==========================================================================
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const notImplemented = (..._args: any[]): Promise<any> => {
+  return Promise.reject(new Error('This feature is not available in the MVP. Coming in v2.'));
+};
+
 export async function signAuthMessage(
-  signMessage: (message: Uint8Array) => Promise<Uint8Array>,
-  action: string,
+  _signMessage: (message: Uint8Array) => Promise<Uint8Array>,
+  _action: string,
 ): Promise<{ signature: string; message: string }> {
-  const msg = `LegacyX ${action}\nTimestamp: ${Date.now()}`;
-  const messageBytes = new TextEncoder().encode(msg);
-  const signatureBytes = await signMessage(messageBytes);
-
-  // Convert Uint8Array to base58 using simple encoding
-  const signature = uint8ToBase58(signatureBytes);
-  return { signature, message: msg };
+  throw new Error('Wallet auth not available in MVP');
 }
-
-// Simple base58 encoding (matching bs58 library output)
-function uint8ToBase58(bytes: Uint8Array): string {
-  const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-  let num = BigInt(0);
-  for (let i = 0; i < bytes.length; i++) {
-    num = num * BigInt(256) + BigInt(bytes[i]);
-  }
-  let encoded = '';
-  while (num > BigInt(0)) {
-    const remainder = num % BigInt(58);
-    num = num / BigInt(58);
-    encoded = ALPHABET[Number(remainder)] + encoded;
-  }
-  // Add leading '1' for each leading zero byte
-  for (let i = 0; i < bytes.length; i++) {
-    if (bytes[i] === 0) encoded = '1' + encoded;
-    else break;
-  }
-  return encoded;
-}
-
-// ==========================================================================
-// VAULT ENDPOINTS
-// ==========================================================================
 
 export const vaultApi = {
-  async create(params: {
-    ownerPubkey: string;
-    vaultName: string;
-    checkInInterval: number;
-    heirPubkeys: string[];
-    guardianPubkeys: string[];
-    recoveryThreshold: number;
-    signature: string;
-    message: string;
-  }) {
-    return request<{
-      success: boolean;
-      transaction: string;
-      vaultPda: string;
-      vault: { owner: string; name: string; checkInInterval: number; heirCount: number; guardianCount: number };
-    }>('/vault/create', {
-      method: 'POST',
-      body: JSON.stringify(params),
-    });
-  },
-
-  async checkIn(params: { ownerPubkey: string; signature: string; message: string }) {
-    return request<{
-      success: boolean;
-      transaction: string;
-      checkInAt: string;
-    }>('/vault/checkin', {
-      method: 'POST',
-      body: JSON.stringify(params),
-    });
-  },
-
-  async upload(params: {
-    ownerPubkey: string;
-    encryptedData: string;
-    contentType: string;
-    signature: string;
-    message: string;
-    encryptedKeyShard?: string;
-  }) {
-    return request<{
-      success: boolean;
-      transaction: string;
-      arweaveCid: string;
-      arweaveUrl: string;
-    }>('/vault/upload', {
-      method: 'POST',
-      body: JSON.stringify(params),
-    });
-  },
-
-  async addHeir(params: {
-    ownerPubkey: string;
-    heirPubkey: string;
-    signature: string;
-    message: string;
-  }) {
-    return request<{ success: boolean; transaction: string }>('/vault/add-heir', {
-      method: 'POST',
-      body: JSON.stringify(params),
-    });
-  },
-
-  async burnMessage(params: {
-    heirPubkey: string;
-    vaultOwnerPubkey: string;
-    cidToBurn: string;
-    signature: string;
-    message: string;
-  }) {
-    return request<{ success: boolean; transaction: string }>('/vault/burn', {
-      method: 'POST',
-      body: JSON.stringify(params),
-    });
-  },
-
-  async mintCertificate(params: { ownerPubkey: string; signature: string; message: string }) {
-    return request<{
-      success: boolean;
-      transaction: string;
-      certificatePda: string;
-      links: { solscan: string; explorer: string };
-    }>('/vault/mint-certificate', {
-      method: 'POST',
-      body: JSON.stringify(params),
-    });
-  },
-
-  async get(pubkey: string) {
-    return request<{
-      success: boolean;
-      vault: {
-        pubkey: string;
-        owner: string;
-        vaultName: string;
-        status: 'Active' | 'Triggered' | 'Released' | 'Burned';
-        checkInInterval: number;
-        lastCheckIn: number;
-        triggeredAt: number;
-        createdAt: number;
-        heirPubkeys: string[];
-        guardianPubkeys: string[];
-        recoveryThreshold: number;
-        arweaveCids: string[];
-        encryptedKeyShards: string[];
-        fileCount: number;
-        heirCount: number;
-        guardianCount: number;
-        whistleblowerEnabled: boolean;
-        certificateMint: string | null;
-      };
-      links: { solscan: string; explorer: string };
-    }>(`/vault/${pubkey}`);
-  },
-
-  async getCertificate(pubkey: string) {
-    return request<{
-      success: boolean;
-      certificate: {
-        vaultPubkey: string;
-        owner: string;
-        mintAddress: string;
-        createdAt: number;
-        links: { solscan: string; explorer: string; certificate: { solscan: string; explorer: string } };
-      };
-    }>(`/vault/${pubkey}/certificate`);
-  },
-
-  async getNotifications(pubkey: string, unreadOnly = false) {
-    return request<{
-      success: boolean;
-      notifications: Array<{
-        id: string;
-        type: string;
-        title: string;
-        message: string;
-        createdAt: number;
-        read: boolean;
-      }>;
-      unreadCount: number;
-    }>(`/vault/${pubkey}/notifications?unread=${unreadOnly}`);
-  },
+  create: notImplemented,
+  checkIn: notImplemented,
+  upload: notImplemented,
+  addHeir: notImplemented,
+  burnMessage: notImplemented,
+  mintCertificate: notImplemented,
+  get: notImplemented,
+  getCertificate: notImplemented,
+  getNotifications: notImplemented,
 };
-
-// ==========================================================================
-// IDENTITY ENDPOINTS
-// ==========================================================================
 
 export const identityApi = {
-  async submitProof(params: {
-    ownerPubkey: string;
-    faceHash: string;
-    voiceHash: string;
-    signature: string;
-    message: string;
-  }) {
-    return request<{
-      success: boolean;
-      transaction: string;
-      identityPda: string;
-      identityProof: { owner: string; faceHash: string; voiceHash: string };
-      links: { solscan: string; explorer: string };
-    }>('/identity/proof', {
-      method: 'POST',
-      body: JSON.stringify(params),
-    });
-  },
-
-  async getProof(pubkey: string) {
-    return request<{
-      success: boolean;
-      identityProof: {
-        pda: string;
-        owner: string;
-        faceHash: string;
-        voiceHash: string;
-        provedAt: number;
-        isActive: boolean;
-      };
-      links: { solscan: string; explorer: string };
-    }>(`/identity/${pubkey}`);
-  },
+  submitProof: notImplemented,
+  getProof: notImplemented,
 };
-
-// ==========================================================================
-// RECOVERY ENDPOINTS
-// ==========================================================================
 
 export const recoveryApi = {
-  async sign(params: {
-    vaultPubkey: string;
-    proposedNewOwner: string;
-    guardianPubkey: string;
-    signature: string;
-    message: string;
-  }) {
-    return request<{
-      success: boolean;
-      transaction: string;
-      recovery: {
-        vault: string;
-        proposedNewOwner: string;
-        signedBy: string;
-        threshold: number;
-        totalGuardians: number;
-      };
-    }>('/recovery/sign', {
-      method: 'POST',
-      body: JSON.stringify(params),
-    });
-  },
-
-  async getStatus(vaultPubkey: string) {
-    return request<{
-      success: boolean;
-      recovery: {
-        vault: string;
-        guardianCount: number;
-        threshold: number;
-        guardians: string[];
-      };
-    }>(`/recovery/${vaultPubkey}/status`);
-  },
+  sign: notImplemented,
+  getStatus: notImplemented,
 };
-
-// ==========================================================================
-// WHISTLEBLOWER ENDPOINTS
-// ==========================================================================
 
 export const whistleblowerApi = {
-  async configure(params: {
-    ownerPubkey: string;
-    vaultPubkey: string;
-    broadcastWallets: string[];
-    signature: string;
-    message: string;
-  }) {
-    return request<{
-      success: boolean;
-      transaction: string;
-      whistleblower: { vault: string; walletCount: number; configured: boolean };
-    }>('/whistleblower/configure', {
-      method: 'POST',
-      body: JSON.stringify(params),
-    });
-  },
+  configure: notImplemented,
 };
 
-// ==========================================================================
-// EXPLORER ENDPOINTS
-// ==========================================================================
-
 export const explorerApi = {
-  async getLinks(txid: string) {
-    return request<{
-      success: boolean;
-      links: { solscan: string; explorer: string; orb: string };
-    }>(`/explorer/${txid}`);
-  },
+  getLinks: notImplemented,
 };

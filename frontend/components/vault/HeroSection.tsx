@@ -65,14 +65,11 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 2.4, duration: 0.4 }}
         >
-          <Link href="/vault/create" className="btn-gold" data-interactive>
-            {/* Phantom ghost icon */}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" opacity="0.7">
-              <circle cx="8" cy="10" r="2" />
-              <circle cx="16" cy="10" r="2" />
-              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" opacity="0.2" />
-            </svg>
-            Create Your Vault
+          <Link href="/register" className="btn-gold" data-interactive>
+            Get Started
+          </Link>
+          <Link href="/login" className="btn-ghost" data-interactive>
+            Sign In
           </Link>
           <Link href="#how-it-works" className="btn-ghost" data-interactive>
             See How It Works
