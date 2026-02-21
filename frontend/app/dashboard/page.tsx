@@ -90,7 +90,7 @@ export default function DashboardPage() {
       <div className="min-h-screen flex flex-col items-center justify-center px-6">
         <h1 className="font-display text-3xl mb-4">Connect Your Wallet</h1>
         <p className="text-vault-muted mb-8">
-          Connect your Phantom wallet to access your SoulVault dashboard.
+          Connect your Phantom wallet to access your LegacyX dashboard.
         </p>
         <ConnectWalletButton />
       </div>
@@ -125,7 +125,7 @@ export default function DashboardPage() {
           </div>
           <h2 className="font-display text-2xl mb-3">No Vault Found</h2>
           <p className="text-vault-muted text-sm mb-8">
-            You don&apos;t have a SoulVault yet. Create one to start securing your digital legacy.
+            You don&apos;t have a LegacyX vault yet. Create one to start securing your digital legacy.
           </p>
           <Link href="/vault/create" className="btn-gold">
             Create Your Vault

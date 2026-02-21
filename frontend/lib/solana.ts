@@ -1,7 +1,7 @@
 /**
- * SoulVault Solana Program Client
+ * LegacyX Solana Program Client
  *
- * TypeScript client for interacting with the SoulVault Anchor program.
+ * TypeScript client for interacting with the LegacyX Anchor program.
  * Provides type-safe wrappers for all program instructions.
  *
  * SECURITY:
@@ -14,7 +14,7 @@ import { PublicKey, SystemProgram, Connection } from '@solana/web3.js';
 
 // ─── Program Constants ────────────────────────────────────────────────────────
 
-export const SOULVAULT_PROGRAM_ID = new PublicKey(
+export const LEGACYX_PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_PROGRAM_ID || 'XKKXHcAFTJJdGD9eQVmQkHBUEdtzWjvPamPiN2Lveqz'
 );
 
@@ -33,7 +33,7 @@ const DEADSWITCH_SEED = 'deadswitch';
 export function deriveVaultPDA(owner: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from(VAULT_SEED), owner.toBuffer()],
-    SOULVAULT_PROGRAM_ID
+    LEGACYX_PROGRAM_ID
   );
 }
 
@@ -43,7 +43,7 @@ export function deriveVaultPDA(owner: PublicKey): [PublicKey, number] {
 export function deriveDeadSwitchPDA(vault: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from(DEADSWITCH_SEED), vault.toBuffer()],
-    SOULVAULT_PROGRAM_ID
+    LEGACYX_PROGRAM_ID
   );
 }
 

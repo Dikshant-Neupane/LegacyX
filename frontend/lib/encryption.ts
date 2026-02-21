@@ -1,5 +1,5 @@
 /**
- * SoulVault Encryption Library
+ * LegacyX Encryption Library
  *
  * Client-side AES-256-GCM encryption using SubtleCrypto Web API.
  * The server NEVER sees plaintext data — encryption happens entirely in the browser.

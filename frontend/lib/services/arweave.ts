@@ -1,7 +1,7 @@
 ﻿/**
  * Storage Service — Stub
  * 
- * SoulVault uses IPFS (web3.storage / Pinata) instead of Arweave.
+ * LegacyX uses IPFS (web3.storage / Pinata) instead of Arweave.
  * This file is a stub to prevent import errors from legacy API routes.
  * Actual IPFS upload logic will be added in Step 3 (Dashboard).
  */

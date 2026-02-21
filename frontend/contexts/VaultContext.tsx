@@ -10,7 +10,7 @@ import {
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
-import { SOULVAULT_PROGRAM_ID, deriveVaultPDA } from '@/lib/solana';
+import { LEGACYX_PROGRAM_ID, deriveVaultPDA } from '@/lib/solana';
 import { deserializeVaultAccount } from '@/lib/deserialize';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       // Check if the vault account exists on-chain
       const accountInfo = await connection.getAccountInfo(vaultPDA);
 
-      if (!accountInfo || accountInfo.owner.toBase58() !== SOULVAULT_PROGRAM_ID.toBase58()) {
+      if (!accountInfo || accountInfo.owner.toBase58() !== LEGACYX_PROGRAM_ID.toBase58()) {
         // No vault exists for this wallet
         setVault(null);
       } else {

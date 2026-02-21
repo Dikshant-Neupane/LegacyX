@@ -1,5 +1,5 @@
 /**
- * SoulVault — Borsh Account Deserialization
+ * LegacyX — Borsh Account Deserialization
  *
  * Manually deserializes the VaultAccount from raw Borsh bytes.
  * Matches the Rust struct layout exactly:

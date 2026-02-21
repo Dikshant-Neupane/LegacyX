@@ -1,5 +1,5 @@
 /**
- * SoulVault — Vault Backup & Export
+ * LegacyX — Vault Backup & Export
  *
  * Generates a downloadable JSON backup of vault metadata.
  * This backup contains ONLY public on-chain data — no private keys,
@@ -88,7 +88,7 @@ export function downloadBackup(backup: VaultBackup): void {
 
   const a = document.createElement('a');
   a.href = url;
-  a.download = `soulvault-backup-${backup.vault.vaultName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}-${Date.now()}.json`;
+  a.download = `legacyx-backup-${backup.vault.vaultName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}-${Date.now()}.json`;
   document.body.appendChild(a);
   a.click();
 

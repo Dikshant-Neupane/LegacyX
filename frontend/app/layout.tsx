@@ -5,7 +5,7 @@ import { Header } from '@/components/layout/Header';
 import { CustomCursor } from '@/components/ui/CustomCursor';
 
 export const metadata: Metadata = {
-  title: 'SoulVault — Your digital legacy, encrypted forever.',
+  title: 'LegacyX — Your digital legacy, encrypted forever.',
   description:
     'A Solana-powered self-sovereign digital legacy vault. Store your documents, passwords, and files — encrypted and blockchain-secured. Only you can access it. Not even we can touch it.',
   keywords: [
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     'IPFS',
   ],
   openGraph: {
-    title: 'SoulVault — Not even we can touch it.',
+    title: 'LegacyX — Not even we can touch it.',
     description:
       'Encrypted digital legacy vault on Solana. Store everything. When you pass, your beneficiary gets access automatically.',
     type: 'website',

@@ -167,7 +167,7 @@ export function VerifyBackup({ className = '' }: VerifyBackupProps) {
           <div>
             <p className="text-vault-red text-sm font-medium mb-1">Invalid File</p>
             <p className="text-vault-muted text-xs">
-              This file is not a valid SoulVault backup.
+              This file is not a valid LegacyX backup.
             </p>
           </div>
         )}

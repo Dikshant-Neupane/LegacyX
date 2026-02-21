@@ -14,7 +14,7 @@ import { VaultProvider } from '@/contexts/VaultContext';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 /**
- * SoulVault Providers
+ * LegacyX Providers
  *
  * Wraps the app with:
  * 1. Solana ConnectionProvider (devnet, switchable via env)

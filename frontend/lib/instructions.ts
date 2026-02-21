@@ -1,7 +1,7 @@
 /**
- * SoulVault — Instruction Builders
+ * LegacyX — Instruction Builders
  *
- * Creates raw TransactionInstructions for each SoulVault program instruction.
+ * Creates raw TransactionInstructions for each LegacyX program instruction.
  * These use pre-computed Anchor discriminators (SHA-256("global:<fn_name>")[0..8]).
  *
  * SECURITY: No private keys are handled here. Instructions must be signed
@@ -13,7 +13,7 @@ import {
   SystemProgram,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { SOULVAULT_PROGRAM_ID, deriveVaultPDA } from './solana';
+import { LEGACYX_PROGRAM_ID, deriveVaultPDA } from './solana';
 
 // ─── Discriminators (pre-computed) ────────────────────────────────────────────
 
@@ -60,7 +60,7 @@ export function buildCreateVaultInstruction(params: {
   ]);
 
   return new TransactionInstruction({
-    programId: SOULVAULT_PROGRAM_ID,
+    programId: LEGACYX_PROGRAM_ID,
     keys: [
       { pubkey: vaultPDA, isSigner: false, isWritable: true },
       { pubkey: params.owner, isSigner: true, isWritable: true },
@@ -76,7 +76,7 @@ export function buildCheckInInstruction(owner: PublicKey): TransactionInstructio
   const [vaultPDA] = deriveVaultPDA(owner);
 
   return new TransactionInstruction({
-    programId: SOULVAULT_PROGRAM_ID,
+    programId: LEGACYX_PROGRAM_ID,
     keys: [
       { pubkey: vaultPDA, isSigner: false, isWritable: true },
       { pubkey: owner, isSigner: true, isWritable: false },
@@ -99,7 +99,7 @@ export function buildSetBeneficiaryInstruction(params: {
   ]);
 
   return new TransactionInstruction({
-    programId: SOULVAULT_PROGRAM_ID,
+    programId: LEGACYX_PROGRAM_ID,
     keys: [
       { pubkey: vaultPDA, isSigner: false, isWritable: true },
       { pubkey: params.owner, isSigner: true, isWritable: false },
@@ -127,7 +127,7 @@ export function buildAddFileInstruction(params: {
   ]);
 
   return new TransactionInstruction({
-    programId: SOULVAULT_PROGRAM_ID,
+    programId: LEGACYX_PROGRAM_ID,
     keys: [
       { pubkey: vaultPDA, isSigner: false, isWritable: true },
       { pubkey: params.owner, isSigner: true, isWritable: false },
@@ -145,7 +145,7 @@ export function buildTriggerReleaseInstruction(params: {
   const [vaultPDA] = deriveVaultPDA(params.vaultOwner);
 
   return new TransactionInstruction({
-    programId: SOULVAULT_PROGRAM_ID,
+    programId: LEGACYX_PROGRAM_ID,
     keys: [
       { pubkey: vaultPDA, isSigner: false, isWritable: true },
       { pubkey: params.caller, isSigner: true, isWritable: false },
@@ -163,7 +163,7 @@ export function buildReleaseToBeneficiaryInstruction(params: {
   const [vaultPDA] = deriveVaultPDA(params.vaultOwner);
 
   return new TransactionInstruction({
-    programId: SOULVAULT_PROGRAM_ID,
+    programId: LEGACYX_PROGRAM_ID,
     keys: [
       { pubkey: vaultPDA, isSigner: false, isWritable: true },
       { pubkey: params.beneficiary, isSigner: true, isWritable: false },

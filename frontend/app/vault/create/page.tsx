@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { PublicKey, Transaction, TransactionInstruction, SystemProgram } from '@solana/web3.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConnectWalletButton } from '@/components/wallet/ConnectWalletButton';
-import { deriveVaultPDA, SOULVAULT_PROGRAM_ID } from '@/lib/solana';
+import { deriveVaultPDA, LEGACYX_PROGRAM_ID } from '@/lib/solana';
 
 // â”€â”€â”€ Steps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -85,10 +85,10 @@ export default function CreateVaultPage() {
       }
 
       // Pre-flight: check program exists on-chain
-      const programInfo = await connection.getAccountInfo(SOULVAULT_PROGRAM_ID);
+      const programInfo = await connection.getAccountInfo(LEGACYX_PROGRAM_ID);
       if (!programInfo) {
         throw new Error(
-          'SoulVault program is not deployed on this network. ' +
+          'LegacyX program is not deployed on this network. ' +
           'Make sure you are connected to the correct Solana cluster and the program has been deployed.'
         );
       }
@@ -144,7 +144,7 @@ export default function CreateVaultPage() {
       ]);
 
       const ix = new TransactionInstruction({
-        programId: SOULVAULT_PROGRAM_ID,
+        programId: LEGACYX_PROGRAM_ID,
         keys: [
           { pubkey: pda, isSigner: false, isWritable: true },
           { pubkey: publicKey, isSigner: true, isWritable: true },
@@ -456,7 +456,7 @@ export default function CreateVaultPage() {
               <div>
                 <h2 className="font-display text-3xl mb-2">Vault Created</h2>
                 <p className="text-vault-muted">
-                  Your SoulVault is now sealed on Solana. Only your wallet can unlock it.
+                  Your LegacyX vault is now sealed on Solana. Only your wallet can unlock it.
                 </p>
               </div>
 
