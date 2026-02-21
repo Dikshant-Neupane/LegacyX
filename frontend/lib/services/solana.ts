@@ -16,7 +16,7 @@ import { VaultData } from './types';
 // ============================================================================
 
 const PROGRAM_ID = new PublicKey(
-  process.env.PROGRAM_ID || '8fKi12rubJcmMfGRZErHpmM4sbhCyq7cTTPyS9aPoK4Z',
+  process.env.PROGRAM_ID || 'XKKXHcAFTJJdGD9eQVmQkHBUEdtzWjvPamPiN2Lveqz',
 );
 
 const RPC_ENDPOINTS = [

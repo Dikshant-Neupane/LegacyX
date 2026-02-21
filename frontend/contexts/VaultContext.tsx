@@ -1,156 +1,155 @@
 'use client';
 
-import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import {
+  createContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { vaultApi, signAuthMessage } from '@/lib/api';
-import { signAndSendTransaction, type TransactionProgress } from '@/lib/transactions';
+import { useConnection } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
+import { SOULVAULT_PROGRAM_ID, deriveVaultPDA } from '@/lib/solana';
+import { deserializeVaultAccount } from '@/lib/deserialize';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface VaultData {
-    pubkey: string;
-    owner: string;
-    vaultName: string;
-    status: 'Active' | 'Triggered' | 'Released' | 'Burned';
-    checkInInterval: number;
-    lastCheckIn: number;
-    triggeredAt: number;
-    createdAt: number;
-    heirPubkeys: string[];
-    guardianPubkeys: string[];
-    recoveryThreshold: number;
-    arweaveCids: string[];
-    encryptedKeyShards: string[];
-    fileCount: number;
-    heirCount: number;
-    guardianCount: number;
-    whistleblowerEnabled: boolean;
-    certificateMint: string | null;
-    links?: { solscan: string; explorer: string };
+  /** PDA address of the vault account */
+  pubkey: string;
+  /** Owner wallet address */
+  owner: string;
+  /** Vault display name */
+  vaultName: string;
+  /** Current vault status */
+  status: 'Active' | 'Triggered' | 'Released';
+  /** Check-in interval in seconds */
+  checkInInterval: number;
+  /** Last check-in UNIX timestamp */
+  lastCheckIn: number;
+  /** Vault creation UNIX timestamp */
+  createdAt: number;
+  /** Beneficiary wallet address (1 for MVP) */
+  beneficiary: string | null;
+  /** IPFS CIDs stored on-chain (encrypted) */
+  ipfsCids: string[];
+  /** Number of files stored */
+  fileCount: number;
 }
 
 export interface VaultContextValue {
-    vault: VaultData | null;
-    loading: boolean;
-    error: string | null;
-    hasVault: boolean;
-    refresh: () => Promise<void>;
-    checkIn: () => Promise<string | null>;
-    checkingIn: boolean;
-    txProgress: TransactionProgress | null;
+  /** On-chain vault data, null if no vault exists */
+  vault: VaultData | null;
+  /** Whether vault data is being loaded */
+  loading: boolean;
+  /** Error message if fetch failed */
+  error: string | null;
+  /** Whether the connected wallet owns a vault */
+  hasVault: boolean;
+  /** Re-fetch vault data from on-chain */
+  refresh: () => Promise<void>;
 }
 
+// ─── Context ──────────────────────────────────────────────────────────────────
+
 export const VaultContext = createContext<VaultContextValue>({
-    vault: null,
-    loading: true,
-    error: null,
-    hasVault: false,
-    refresh: async () => { },
-    checkIn: async () => null,
-    checkingIn: false,
-    txProgress: null,
+  vault: null,
+  loading: true,
+  error: null,
+  hasVault: false,
+  refresh: async () => {},
 });
 
-// ─── Provider ────────────────────────────────────────────────────────────────
+// ─── Provider ─────────────────────────────────────────────────────────────────
 
+/**
+ * VaultProvider — Reads vault state directly from the Solana blockchain.
+ *
+ * SECURITY:
+ * - No centralized backend calls
+ * - All state is derived from on-chain program accounts
+ * - No sensitive data is stored in React state (only public on-chain data)
+ */
 export function VaultProvider({ children }: { children: ReactNode }) {
-    const { publicKey, connected, signMessage, signTransaction } = useWallet();
-    const [vault, setVault] = useState<VaultData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [checkingIn, setCheckingIn] = useState(false);
-    const [txProgress, setTxProgress] = useState<TransactionProgress | null>(null);
+  const { publicKey, connected } = useWallet();
+  const { connection } = useConnection();
+  const [vault, setVault] = useState<VaultData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    const fetchVault = useCallback(async () => {
-        if (!publicKey) {
-            setVault(null);
-            setLoading(false);
-            return;
-        }
+  const fetchVault = useCallback(async () => {
+    if (!publicKey) {
+      setVault(null);
+      setLoading(false);
+      return;
+    }
 
-        setLoading(true);
-        setError(null);
+    setLoading(true);
+    setError(null);
 
-        try {
-            const result = await vaultApi.get(publicKey.toBase58());
-            if (result.success && result.vault) {
-                setVault({
-                    ...result.vault,
-                    links: result.links,
-                });
-            } else {
-                setVault(null);
-            }
-        } catch (err: unknown) {
-            if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 404) {
-                setVault(null);
-            } else if (err instanceof TypeError && err.message.includes('fetch')) {
-                setError('Cannot connect to backend server. Make sure the backend is running on port 3001.');
-                console.error('Backend connection failed:', err);
-            } else {
-                setError('Failed to fetch vault data');
-                console.error(err);
-            }
-        } finally {
-            setLoading(false);
-        }
-    }, [publicKey]);
+    try {
+      const [vaultPDA] = deriveVaultPDA(publicKey);
 
-    const checkIn = useCallback(async (): Promise<string | null> => {
-        if (!publicKey || !signMessage || !signTransaction) return null;
+      // Check if the vault account exists on-chain
+      const accountInfo = await connection.getAccountInfo(vaultPDA);
 
-        setCheckingIn(true);
-        setTxProgress(null);
-        setError(null);
-
-        try {
-            const { signature, message } = await signAuthMessage(signMessage, 'Check-In');
-
-            const result = await vaultApi.checkIn({
-                ownerPubkey: publicKey.toBase58(),
-                signature,
-                message,
-            });
-
-            const txSig = await signAndSendTransaction(
-                result.transaction,
-                signTransaction,
-                setTxProgress,
-            );
-
-            await fetchVault();
-            return txSig;
-        } catch (err) {
-            const msg = err instanceof Error ? err.message : 'Check-in failed';
-            setError(msg);
-            setTxProgress({ status: 'failed', error: msg });
-            return null;
-        } finally {
-            setCheckingIn(false);
-        }
-    }, [publicKey, signMessage, signTransaction, fetchVault]);
-
-    useEffect(() => {
-        if (connected) {
-            fetchVault();
+      if (!accountInfo || accountInfo.owner.toBase58() !== SOULVAULT_PROGRAM_ID.toBase58()) {
+        // No vault exists for this wallet
+        setVault(null);
+      } else {
+        // Vault account exists — decode the Borsh-serialized data
+        const decoded = deserializeVaultAccount(accountInfo.data);
+        if (decoded) {
+          setVault({
+            pubkey: vaultPDA.toBase58(),
+            owner: decoded.owner,
+            vaultName: decoded.vaultName,
+            status: decoded.status,
+            checkInInterval: decoded.checkInInterval,
+            lastCheckIn: decoded.lastCheckIn,
+            createdAt: decoded.createdAt,
+            beneficiary: decoded.beneficiary,
+            ipfsCids: decoded.ipfsCids,
+            fileCount: decoded.fileCount,
+          });
         } else {
-            setVault(null);
-            setLoading(false);
+          // Account exists but data is malformed
+          setVault(null);
+          setError('Failed to decode vault account data');
         }
-    }, [connected, fetchVault]);
+      }
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to fetch vault data';
+      setError(message);
+      setVault(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [publicKey, connection]);
 
-    return (
-        <VaultContext.Provider
-            value={{
-                vault,
-                loading,
-                error,
-                hasVault: vault !== null,
-                refresh: fetchVault,
-                checkIn,
-                checkingIn,
-                txProgress,
-            }}
-        >
-            {children}
-        </VaultContext.Provider>
-    );
+  useEffect(() => {
+    if (connected) {
+      fetchVault();
+    } else {
+      setVault(null);
+      setLoading(false);
+      setError(null);
+    }
+  }, [connected, fetchVault]);
+
+  return (
+    <VaultContext.Provider
+      value={{
+        vault,
+        loading,
+        error,
+        hasVault: vault !== null,
+        refresh: fetchVault,
+      }}
+    >
+      {children}
+    </VaultContext.Provider>
+  );
 }

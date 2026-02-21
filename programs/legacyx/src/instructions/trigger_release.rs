@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use crate::state::{VaultAccount, VaultStatus};
-use crate::errors::LegacyXError;
+use crate::errors::SoulVaultError;
 use crate::events::VaultTriggered;
 
 /// # Trigger Release
@@ -14,7 +14,7 @@ use crate::events::VaultTriggered;
 /// - Grace period is a fixed 30 days from trigger timestamp.
 ///
 /// ## Failure Modes
-/// - Vault not Active: `VaultAlreadyTriggered`
+/// - Vault not Active: `VaultNotActive`
 /// - Interval not exceeded: `IntervalNotExceeded`
 pub fn handle_trigger_release(ctx: Context<TriggerRelease>) -> Result<()> {
     let vault = &mut ctx.accounts.vault;
@@ -22,7 +22,7 @@ pub fn handle_trigger_release(ctx: Context<TriggerRelease>) -> Result<()> {
     // Only Active vaults can be triggered
     require!(
         vault.vault_status == VaultStatus::Active,
-        LegacyXError::VaultAlreadyTriggered
+        SoulVaultError::VaultNotActive
     );
 
     let clock = Clock::get()?;
@@ -30,21 +30,20 @@ pub fn handle_trigger_release(ctx: Context<TriggerRelease>) -> Result<()> {
     // Check that the check-in interval has been exceeded
     let deadline = vault.last_check_in
         .checked_add(vault.check_in_interval)
-        .ok_or(LegacyXError::ArithmeticOverflow)?;
+        .ok_or(SoulVaultError::ArithmeticOverflow)?;
 
     require!(
         clock.unix_timestamp > deadline,
-        LegacyXError::IntervalNotExceeded
+        SoulVaultError::IntervalNotExceeded
     );
 
     // Move to Triggered state
     vault.vault_status = VaultStatus::Triggered;
     vault.triggered_at = clock.unix_timestamp;
 
-    let grace_period: i64 = 30 * 24 * 60 * 60; // 30 days
     let grace_period_ends = clock.unix_timestamp
-        .checked_add(grace_period)
-        .ok_or(LegacyXError::ArithmeticOverflow)?;
+        .checked_add(VaultAccount::GRACE_PERIOD)
+        .ok_or(SoulVaultError::ArithmeticOverflow)?;
 
     emit!(VaultTriggered {
         vault: vault.key(),
@@ -60,7 +59,7 @@ pub fn handle_trigger_release(ctx: Context<TriggerRelease>) -> Result<()> {
 pub struct TriggerRelease<'info> {
     #[account(
         mut,
-        seeds = [b"vault", vault.owner.as_ref()],
+        seeds = [b"soulvault", vault.owner.as_ref()],
         bump = vault.bump,
     )]
     pub vault: Account<'info, VaultAccount>,

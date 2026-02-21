@@ -6,9 +6,8 @@ import { VaultContext, type VaultContextValue, type VaultData } from '@/contexts
 export type { VaultData };
 
 /**
- * useVault — reads from the shared VaultContext so that every component
- * that needs vault state (Header, Footer, pages) shares a single API call
- * and a single loading / hasVault / error state.
+ * useVault — reads from the shared VaultContext.
+ * All vault state is on-chain. No centralized backend.
  */
 export function useVault(): VaultContextValue {
   const ctx = useContext(VaultContext);

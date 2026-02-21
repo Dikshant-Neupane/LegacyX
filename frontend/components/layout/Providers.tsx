@@ -7,26 +7,41 @@ import {
 } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
-import { clusterApiUrl } from '@solana/web3.js';
-import { LenisProvider } from '@/components/layout/LenisProvider';
+import { clusterApiUrl, type Cluster } from '@solana/web3.js';
 import { VaultProvider } from '@/contexts/VaultContext';
 
+// Import wallet adapter default styles
+import '@solana/wallet-adapter-react-ui/styles.css';
+
+/**
+ * SoulVault Providers
+ *
+ * Wraps the app with:
+ * 1. Solana ConnectionProvider (devnet, switchable via env)
+ * 2. WalletProvider with Phantom only
+ * 3. WalletModalProvider for the connect dialog
+ * 4. VaultProvider for on-chain vault state
+ *
+ * SECURITY: No centralized backend. All state is on-chain or client-side.
+ */
 export function Providers({ children }: { children: ReactNode }) {
+  const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet') as Cluster;
+
   const endpoint = useMemo(
     () =>
       process.env.NEXT_PUBLIC_SOLANA_RPC_URL ||
-      clusterApiUrl('devnet'),
-    []
+      clusterApiUrl(network),
+    [network]
   );
 
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 
   return (
-    <ConnectionProvider endpoint={endpoint} config={{ commitment: 'confirmed', disableRetryOnRateLimit: false }}>
+    <ConnectionProvider endpoint={endpoint} config={{ commitment: 'confirmed' }}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           <VaultProvider>
-            <LenisProvider>{children}</LenisProvider>
+            {children}
           </VaultProvider>
         </WalletModalProvider>
       </WalletProvider>

@@ -1,144 +1,69 @@
 use anchor_lang::prelude::*;
 
 // ============================================================================
-// LEGACYX CUSTOM ERROR CODES
-// Every instruction failure case has a specific error code.
+// SOULVAULT CUSTOM ERROR CODES
 // Range: 6000+ (Anchor custom error range)
 // ============================================================================
 
 #[error_code]
-pub enum LegacyXError {
-    // === Vault Creation Errors (6000-6009) ===
-    #[msg("Vault name exceeds maximum length of 64 characters.")]
+pub enum SoulVaultError {
+    // === Vault Creation (6000-6009) ===
+    #[msg("Vault name exceeds maximum length of 32 characters.")]
     VaultNameTooLong,
 
-    #[msg("Check-in interval must be between 30 days and 5 years.")]
+    #[msg("Vault name cannot be empty.")]
+    VaultNameEmpty,
+
+    #[msg("Check-in interval must be between 30 and 365 days.")]
     InvalidCheckInInterval,
 
-    #[msg("At least one heir must be specified.")]
-    NoHeirsProvided,
+    #[msg("Beneficiary cannot be the vault owner.")]
+    BeneficiaryIsOwner,
 
-    #[msg("Maximum of 10 heirs allowed per vault.")]
-    TooManyHeirs,
+    // === Authorization (6010-6019) ===
+    #[msg("Only the vault owner can perform this action.")]
+    Unauthorized,
 
-    #[msg("Heir pubkey cannot be the same as the vault owner.")]
-    HeirIsOwner,
-
-    // === Check-In Errors (6010-6019) ===
-    #[msg("Only the vault owner can perform a check-in.")]
-    UnauthorizedCheckIn,
-
-    #[msg("Vault is not in Active state — check-in not allowed.")]
-    VaultNotActive,
-
-    #[msg("Check-in is only allowed during Active or Triggered (grace period) state.")]
+    #[msg("Vault must be Active or Triggered to check in.")]
     CheckInNotAllowed,
 
-    // === Trigger Errors (6020-6029) ===
-    #[msg("Check-in interval has not been exceeded yet — vault cannot be triggered.")]
+    // === Trigger (6020-6029) ===
+    #[msg("Check-in interval has not been exceeded yet.")]
     IntervalNotExceeded,
 
-    #[msg("Vault is already in Triggered, Released, or Burned state.")]
-    VaultAlreadyTriggered,
+    #[msg("Vault must be Active to trigger release.")]
+    VaultNotActive,
 
-    // === Release Errors (6030-6039) ===
-    #[msg("Vault must be in Triggered state before release.")]
+    // === Release (6030-6039) ===
+    #[msg("Vault must be in Triggered state to release.")]
     VaultNotTriggered,
 
     #[msg("30-day grace period has not expired yet.")]
     GracePeriodNotExpired,
 
-    #[msg("Caller is not a registered heir of this vault.")]
-    NotAnHeir,
+    #[msg("Caller is not the beneficiary of this vault.")]
+    NotBeneficiary,
 
-    // === Conditional Release Errors (6040-6049) ===
-    #[msg("Condition has already been satisfied.")]
-    ConditionAlreadySatisfied,
+    #[msg("No beneficiary is set for this vault.")]
+    NoBeneficiarySet,
 
-    #[msg("Heir does not hold the required NFT for this condition.")]
-    NftConditionNotMet,
+    // === File Management (6040-6049) ===
+    #[msg("IPFS CID exceeds maximum length of 64 characters.")]
+    CidTooLong,
 
-    #[msg("Heir does not hold sufficient tokens for this condition.")]
-    TokenConditionNotMet,
+    #[msg("IPFS CID cannot be empty.")]
+    CidEmpty,
 
-    #[msg("Timestamp condition has not been reached yet.")]
-    TimestampNotReached,
+    #[msg("Maximum of 50 files allowed per vault.")]
+    TooManyCids,
 
-    #[msg("Invalid condition type for verification.")]
-    InvalidConditionType,
+    #[msg("Vault must be Active to add files.")]
+    VaultNotActiveForFile,
 
-    // === Burn Errors (6050-6059) ===
-    #[msg("Only a registered heir can burn a message.")]
-    UnauthorizedBurn,
-
-    #[msg("Vault must be in Released state before burning.")]
-    VaultNotReleased,
-
-    #[msg("The specified CID was not found in the vault.")]
-    CidNotFound,
-
-    // === Social Recovery Errors (6060-6069) ===
-    #[msg("Caller is not a registered guardian of this vault.")]
-    NotAGuardian,
-
-    #[msg("Guardian has already signed for this recovery attempt.")]
-    GuardianAlreadySigned,
-
-    #[msg("Recovery threshold not yet reached — more guardian signatures needed.")]
-    ThresholdNotReached,
-
-    #[msg("Maximum of 7 guardians allowed per vault.")]
-    TooManyGuardians,
-
-    #[msg("Recovery threshold must be between 1 and the number of guardians.")]
-    InvalidRecoveryThreshold,
-
-    #[msg("New owner cannot be the current owner.")]
-    NewOwnerIsCurrent,
-
-    // === Identity Proof Errors (6070-6079) ===
-    #[msg("Only the vault owner can submit identity proof.")]
-    UnauthorizedIdentityProof,
-
-    #[msg("Face hash must be exactly 32 bytes (SHA-256).")]
-    InvalidFaceHash,
-
-    #[msg("Voice hash must be exactly 32 bytes (SHA-256).")]
-    InvalidVoiceHash,
-
-    // === Whistleblower Errors (6080-6089) ===
-    #[msg("Whistleblower broadcast has already been executed for this vault.")]
-    AlreadyBroadcast,
-
-    #[msg("Vault must be in Triggered state for whistleblower broadcast.")]
-    VaultNotTriggeredForBroadcast,
-
-    #[msg("No broadcast wallets configured for this vault.")]
-    NoBroadcastWallets,
-
-    #[msg("Maximum of 50 broadcast wallets per account (use overflow accounts for more).")]
-    TooManyBroadcastWallets,
-
-    // === Certificate Errors (6090-6099) ===
-    #[msg("Vault certificate has already been minted.")]
-    CertificateAlreadyMinted,
-
-    #[msg("Only the vault owner can mint a certificate.")]
-    UnauthorizedCertificateMint,
-
-    // === General Errors (6100+) ===
+    // === General (6100+) ===
     #[msg("Arithmetic overflow detected.")]
     ArithmeticOverflow,
 
-    #[msg("Arweave CID exceeds maximum length of 64 characters.")]
-    CidTooLong,
-
-    #[msg("Maximum of 100 files allowed per vault.")]
-    TooManyCids,
-
-    #[msg("Encrypted key shard exceeds maximum length.")]
-    ShardTooLong,
-
-    #[msg("Phantom Wallet signature verification failed.")]
-    InvalidSignature,
+    #[msg("Vault is already released.")]
+    VaultAlreadyReleased,
 }

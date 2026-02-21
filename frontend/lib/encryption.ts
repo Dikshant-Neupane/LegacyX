@@ -1,5 +1,5 @@
 /**
- * LegacyX Encryption Library
+ * SoulVault Encryption Library
  *
  * Client-side AES-256-GCM encryption using SubtleCrypto Web API.
  * The server NEVER sees plaintext data — encryption happens entirely in the browser.
@@ -7,7 +7,14 @@
  * Flow:
  * 1. User's Phantom wallet signature → HKDF → vault master key
  * 2. Master key encrypts files/messages with AES-256-GCM
- * 3. Only encrypted blobs leave the browser
+ * 3. Only encrypted blobs leave the browser → IPFS
+ *
+ * SECURITY:
+ * - No key material is ever sent to any server
+ * - AES-256-GCM provides authenticated encryption (tamper detection)
+ * - Each encrypt() call uses a fresh random IV (12 bytes) and salt (16 bytes)
+ * - Plaintext integrity is verified via SHA-256 hash on decrypt
+ * - HKDF with unique info string prevents cross-application key reuse
  *
  * "Not even we can touch it."
  */
@@ -16,7 +23,7 @@ const ALGORITHM = 'AES-GCM';
 const KEY_LENGTH = 256;
 const IV_LENGTH = 12; // 96 bits for AES-GCM
 const SALT_LENGTH = 16;
-const HKDF_INFO = new TextEncoder().encode('LegacyX-vault-v1');
+const HKDF_INFO = new TextEncoder().encode('SoulVault-v1');
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

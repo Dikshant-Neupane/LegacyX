@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use crate::state::{VaultAccount, VaultStatus};
-use crate::errors::LegacyXError;
+use crate::errors::SoulVaultError;
 use crate::events::CheckInCompleted;
 
 /// # Check In
@@ -14,21 +14,15 @@ use crate::events::CheckInCompleted;
 /// - Check-in is allowed in Active or Triggered (grace period) states only.
 ///
 /// ## Failure Modes
-/// - Wrong signer: `UnauthorizedCheckIn`
-/// - Vault in Released or Burned state: `CheckInNotAllowed`
+/// - Wrong signer: Anchor `has_one` constraint rejects
+/// - Vault in Released state: `CheckInNotAllowed`
 pub fn handle_check_in(ctx: Context<CheckIn>) -> Result<()> {
     let vault = &mut ctx.accounts.vault;
-
-    // Verify the signer is the vault owner
-    require!(
-        vault.owner == ctx.accounts.owner.key(),
-        LegacyXError::UnauthorizedCheckIn
-    );
 
     // Check-in allowed only in Active or Triggered (grace period) states
     require!(
         vault.vault_status == VaultStatus::Active || vault.vault_status == VaultStatus::Triggered,
-        LegacyXError::CheckInNotAllowed
+        SoulVaultError::CheckInNotAllowed
     );
 
     let clock = Clock::get()?;
@@ -44,7 +38,7 @@ pub fn handle_check_in(ctx: Context<CheckIn>) -> Result<()> {
 
     let next_deadline = clock.unix_timestamp
         .checked_add(vault.check_in_interval)
-        .ok_or(LegacyXError::ArithmeticOverflow)?;
+        .ok_or(SoulVaultError::ArithmeticOverflow)?;
 
     emit!(CheckInCompleted {
         owner: ctx.accounts.owner.key(),
@@ -60,9 +54,9 @@ pub fn handle_check_in(ctx: Context<CheckIn>) -> Result<()> {
 pub struct CheckIn<'info> {
     #[account(
         mut,
-        seeds = [b"vault", owner.key().as_ref()],
+        seeds = [b"soulvault", owner.key().as_ref()],
         bump = vault.bump,
-        has_one = owner @ LegacyXError::UnauthorizedCheckIn,
+        has_one = owner @ SoulVaultError::Unauthorized,
     )]
     pub vault: Account<'info, VaultAccount>,
 

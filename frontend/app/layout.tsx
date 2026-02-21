@@ -1,28 +1,27 @@
 import type { Metadata } from 'next';
 import '@/styles/globals.css';
 import { Providers } from '@/components/layout/Providers';
-import { CustomCursor } from '@/components/ui/CustomCursor';
-import { GrainOverlay } from '@/components/ui/GrainOverlay';
-import { PageTransition } from '@/components/animations/PageTransition';
 import { Header } from '@/components/layout/Header';
+import { CustomCursor } from '@/components/ui/CustomCursor';
 
 export const metadata: Metadata = {
-  title: 'LegacyX — Your life, encrypted. Your legacy, permanent.',
+  title: 'SoulVault — Your digital legacy, encrypted forever.',
   description:
-    'A Solana-powered digital life vault. Store your assets, secrets, final words, and identity proof — governed by unstoppable smart contracts. Not even we can touch it.',
+    'A Solana-powered self-sovereign digital legacy vault. Store your documents, passwords, and files — encrypted and blockchain-secured. Only you can access it. Not even we can touch it.',
   keywords: [
     'Solana',
     'digital vault',
-    'inheritance',
+    'legacy',
     'encryption',
     'blockchain',
-    'identity proof',
     'Phantom Wallet',
+    'dead man switch',
+    'IPFS',
   ],
   openGraph: {
-    title: 'LegacyX — Not even we can touch it.',
+    title: 'SoulVault — Not even we can touch it.',
     description:
-      'Encrypted digital life vault on Solana. Final words, conditional inheritance, whistleblower protection, identity proof.',
+      'Encrypted digital legacy vault on Solana. Store everything. When you pass, your beneficiary gets access automatically.',
     type: 'website',
   },
 };
@@ -33,14 +32,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="lenis">
+    <html lang="en">
       <body className="bg-vault-bg text-vault-text font-body min-h-screen antialiased">
         <Providers>
           <CustomCursor />
           <Header />
-          <PageTransition>
-            <main>{children}</main>
-          </PageTransition>
+          <main className="pt-16">{children}</main>
         </Providers>
       </body>
     </html>

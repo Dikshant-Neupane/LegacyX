@@ -203,12 +203,12 @@ export function reconstructSecret(shards: KeyShard[], secretLength: number): Uin
  * (Placeholder — in production, use guardian's Solana pubkey for X25519 exchange)
  */
 export async function encryptShardForGuardian(
-  shard: KeyShard,
+  _shard: KeyShard,
   _guardianPubkey: string
 ): Promise<string> {
-  // TODO: In production, perform X25519 key exchange with guardian's pubkey
-  // For hackathon: return shard data (guardian retrieves via on-chain data)
-  return JSON.stringify(shard);
+  // BLOCKED: Guardian shard encryption not yet implemented.
+  // Must use X25519 key exchange with guardian's Solana pubkey before enabling.
+  throw new Error('encryptShardForGuardian is not implemented — shard distribution is disabled');
 }
 
 // ─── Utilities ────────────────────────────────────────────────────────────────

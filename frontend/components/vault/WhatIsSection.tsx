@@ -125,11 +125,23 @@ export function WhatIsSection() {
               {features[activeIndex].description}
             </motion.p>
 
-            {/* Decorative vault rings */}
+            {/* Decorative vault rings — animated */}
             <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full border border-vault-gold/10" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full border border-vault-gold/5" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full border border-vault-gold/[0.02]" />
+              <motion.div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full border border-vault-gold/10"
+                animate={{ scale: [1, 1.05, 1], opacity: [0.4, 0.7, 0.4] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <motion.div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full border border-vault-gold/5"
+                animate={{ scale: [1, 1.03, 1], opacity: [0.2, 0.5, 0.2] }}
+                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+              />
+              <motion.div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full border border-vault-gold/[0.02]"
+                animate={{ scale: [1, 1.02, 1], opacity: [0.1, 0.3, 0.1] }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+              />
             </div>
           </div>
         </motion.div>

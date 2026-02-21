@@ -15,8 +15,8 @@ export function Footer() {
     <footer className="border-t border-vault-border py-8 px-6">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Wordmark */}
-        <span className="font-body font-bold text-vault-text">
-          LegacyX
+        <span className="font-display font-bold text-vault-text">
+          Soul<span className="text-vault-gold">Vault</span>
         </span>
 
         {/* Navigation */}
@@ -58,7 +58,7 @@ export function Footer() {
         {/* Powered by */}
         <div className="flex items-center gap-3">
           <span className="text-xs text-vault-muted">
-            Built in Nepal. Powered by Solana.
+            Powered by Solana. Encrypted by you.
           </span>
         </div>
       </div>

@@ -4,6 +4,10 @@ members = [
     "programs/legacyx"
 ]
 
+# Pin serde to avoid serde_core Windows path bug (spaces in username)
+[workspace.dependencies]
+serde = "=1.0.217"
+
 [profile.release]
 overflow-checks = true
 lto = "fat"

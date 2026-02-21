@@ -39,17 +39,22 @@ interface CronResult {
 export async function GET(request: NextRequest) {
     const startTime = Date.now();
 
-    // ── 1. Verify Cron Secret ───────────────────────────────────────────────
+    // ── 1. Verify Cron Secret (default-deny) ────────────────────────────────
     // Vercel automatically sends `Authorization: Bearer <CRON_SECRET>` header
-    if (CRON_SECRET) {
-        const authHeader = request.headers.get('authorization');
-        if (authHeader !== `Bearer ${CRON_SECRET}`) {
-            console.error('[CRON] Unauthorized request — invalid CRON_SECRET');
-            return NextResponse.json(
-                { ok: false, error: 'Unauthorized' },
-                { status: 401 }
-            );
-        }
+    if (!CRON_SECRET) {
+        console.error('[CRON] CRON_SECRET not configured — rejecting request');
+        return NextResponse.json(
+            { ok: false, error: 'CRON_SECRET not configured' },
+            { status: 500 }
+        );
+    }
+    const authHeader = request.headers.get('authorization');
+    if (authHeader !== `Bearer ${CRON_SECRET}`) {
+        console.error('[CRON] Unauthorized request — invalid CRON_SECRET');
+        return NextResponse.json(
+            { ok: false, error: 'Unauthorized' },
+            { status: 401 }
+        );
     }
 
     console.log('[CRON] Check-In Monitor started at', new Date().toISOString());

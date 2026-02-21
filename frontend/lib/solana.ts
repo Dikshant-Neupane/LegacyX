@@ -1,123 +1,75 @@
 /**
- * LegacyX Solana Program Client
+ * SoulVault Solana Program Client
  *
- * TypeScript client for interacting with the LegacyX Anchor program.
+ * TypeScript client for interacting with the SoulVault Anchor program.
  * Provides type-safe wrappers for all program instructions.
+ *
+ * SECURITY:
+ * - Program ID is loaded from env or defaults to devnet deployment
+ * - All PDA derivations are deterministic and verifiable
+ * - No private keys are ever handled here
  */
 
-import { PublicKey, SystemProgram, Connection, Transaction } from '@solana/web3.js';
+import { PublicKey, SystemProgram, Connection } from '@solana/web3.js';
 
 // ─── Program Constants ────────────────────────────────────────────────────────
 
-export const LEGACYX_PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_PROGRAM_ID || '8fKi12rubJcmMfGRZErHpmM4sbhCyq7cTTPyS9aPoK4Z'
+export const SOULVAULT_PROGRAM_ID = new PublicKey(
+  process.env.NEXT_PUBLIC_PROGRAM_ID || 'XKKXHcAFTJJdGD9eQVmQkHBUEdtzWjvPamPiN2Lveqz'
 );
 
 export const DEVNET_RPC = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
 
 // ─── PDA Seeds ────────────────────────────────────────────────────────────────
 
-const VAULT_SEED = 'vault';
-const CONDITION_SEED = 'condition';
-const IDENTITY_SEED = 'identity';
-const GUARDIAN_SEED = 'guardian';
-const WHISTLEBLOWER_SEED = 'whistleblower';
+const VAULT_SEED = 'soulvault';
+const DEADSWITCH_SEED = 'deadswitch';
 
 // ─── PDA Derivation ───────────────────────────────────────────────────────────
 
 /**
- * Derive the Vault PDA for a given owner.
+ * Derive the Vault PDA for a given owner wallet.
  */
 export function deriveVaultPDA(owner: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from(VAULT_SEED), owner.toBuffer()],
-    LEGACYX_PROGRAM_ID
+    SOULVAULT_PROGRAM_ID
   );
 }
 
 /**
- * Derive a Condition PDA for a vault.
+ * Derive the Dead Man's Switch PDA for a given vault.
  */
-export function deriveConditionPDA(
-  vault: PublicKey,
-  conditionIndex: number
-): [PublicKey, number] {
+export function deriveDeadSwitchPDA(vault: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [
-      Buffer.from(CONDITION_SEED),
-      vault.toBuffer(),
-      new Uint8Array([conditionIndex]),
-    ],
-    LEGACYX_PROGRAM_ID
-  );
-}
-
-/**
- * Derive an Identity Proof PDA for a vault.
- */
-export function deriveIdentityPDA(vault: PublicKey): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from(IDENTITY_SEED), vault.toBuffer()],
-    LEGACYX_PROGRAM_ID
-  );
-}
-
-/**
- * Derive a Guardian PDA.
- */
-export function deriveGuardianPDA(
-  vault: PublicKey,
-  guardian: PublicKey
-): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from(GUARDIAN_SEED), vault.toBuffer(), guardian.toBuffer()],
-    LEGACYX_PROGRAM_ID
-  );
-}
-
-/**
- * Derive a Whistleblower Config PDA.
- */
-export function deriveWhistleblowerPDA(vault: PublicKey): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from(WHISTLEBLOWER_SEED), vault.toBuffer()],
-    LEGACYX_PROGRAM_ID
+    [Buffer.from(DEADSWITCH_SEED), vault.toBuffer()],
+    SOULVAULT_PROGRAM_ID
   );
 }
 
 // ─── Account Types (matching Rust state) ──────────────────────────────────────
 
-export type VaultStatus = 'Active' | 'Triggered' | 'Released' | 'Burned';
+export type VaultStatus = 'Active' | 'Triggered' | 'Released';
 
 export interface VaultAccount {
   owner: PublicKey;
-  heirs: PublicKey[];
-  guardians: PublicKey[];
+  beneficiary: PublicKey | null;
   checkInInterval: number; // seconds
   lastCheckIn: number; // Unix timestamp
   createdAt: number;
   status: VaultStatus;
-  arweaveCids: string[];
-  encryptedKeyShards: string[];
-  recoveryThreshold: number;
-  recoverySignatures: number;
+  ipfsCids: string[];
   vaultName: string;
   bump: number;
 }
 
-export interface ConditionType {
-  HoldsNft?: { mint: PublicKey };
-  HoldsToken?: { mint: PublicKey; amount: number };
-  TimestampReached?: { timestamp: number };
-  CustomProof?: { hash: number[] };
-}
-
-export interface VaultCondition {
+export interface DeadManSwitch {
   vault: PublicKey;
-  conditionType: ConditionType;
-  satisfied: boolean;
-  createdAt: number;
-  satisfiedAt: number | null;
+  beneficiary: PublicKey;
+  inactivityPeriod: number; // seconds (30/60/90 days)
+  lastCheckIn: number; // Unix timestamp
+  triggered: boolean;
+  triggeredAt: number | null;
   bump: number;
 }
 
@@ -130,7 +82,7 @@ export function buildCreateVaultIx(params: {
   owner: PublicKey;
   vaultName: string;
   checkInIntervalDays: number;
-  heirs: PublicKey[];
+  beneficiary?: PublicKey;
 }) {
   const [vaultPDA] = deriveVaultPDA(params.owner);
   const checkInIntervalSeconds = params.checkInIntervalDays * 86400;
@@ -145,13 +97,13 @@ export function buildCreateVaultIx(params: {
     args: {
       vaultName: params.vaultName,
       checkInInterval: checkInIntervalSeconds,
-      heirs: params.heirs,
+      beneficiary: params.beneficiary || null,
     },
   };
 }
 
 /**
- * Build a CheckIn instruction.
+ * Build a CheckIn instruction (resets dead man's switch timer).
  */
 export function buildCheckInIx(owner: PublicKey) {
   const [vaultPDA] = deriveVaultPDA(owner);
@@ -166,12 +118,11 @@ export function buildCheckInIx(owner: PublicKey) {
 }
 
 /**
- * Build an AddFile instruction.
+ * Build an AddFile instruction (store encrypted IPFS CID on-chain).
  */
 export function buildAddFileIx(params: {
   owner: PublicKey;
-  arweaveCid: string;
-  encryptedKeyShard: string;
+  ipfsCid: string;
 }) {
   const [vaultPDA] = deriveVaultPDA(params.owner);
 
@@ -182,18 +133,17 @@ export function buildAddFileIx(params: {
       owner: params.owner,
     },
     args: {
-      arweaveCid: params.arweaveCid,
-      encryptedKeyShard: params.encryptedKeyShard,
+      ipfsCid: params.ipfsCid,
     },
   };
 }
 
 /**
- * Build an AddHeir instruction.
+ * Build a SetBeneficiary instruction.
  */
-export function buildAddHeirIx(params: {
+export function buildSetBeneficiaryIx(params: {
   owner: PublicKey;
-  heirPubkey: PublicKey;
+  beneficiary: PublicKey;
 }) {
   const [vaultPDA] = deriveVaultPDA(params.owner);
 
@@ -204,7 +154,7 @@ export function buildAddHeirIx(params: {
       owner: params.owner,
     },
     args: {
-      heir: params.heirPubkey,
+      beneficiary: params.beneficiary,
     },
   };
 }
@@ -222,6 +172,7 @@ export function getConnection(): Connection {
 
 /**
  * Fetch a vault account by owner's public key.
+ * Returns null if vault doesn't exist.
  */
 export async function fetchVaultAccount(
   owner: PublicKey
