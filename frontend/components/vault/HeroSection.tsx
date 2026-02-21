@@ -22,7 +22,7 @@ export function HeroSection() {
   const { hasVault } = useVault();
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
+    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 overflow-hidden">
       {/* Subtle radial glow */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="w-[600px] h-[600px] rounded-full bg-vault-gold/5 blur-[120px]" />
@@ -110,7 +110,7 @@ export function HeroSection() {
 
         {/* Trust badges */}
         <motion.div
-          className="mt-16 flex items-center gap-6 text-xs text-vault-muted"
+          className="mt-12 sm:mt-16 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-vault-muted"
           variants={fadeUp}
         >
           <span className="flex items-center gap-1.5">

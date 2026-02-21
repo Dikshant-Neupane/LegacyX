@@ -56,9 +56,9 @@ export function TrustSection() {
   const isInView = useInView(ref, { once: true, margin: '-10%' });
 
   return (
-    <section ref={ref} className="py-32 px-6 max-w-7xl mx-auto">
+    <section ref={ref} className="py-24 sm:py-32 px-4 sm:px-6 max-w-7xl mx-auto">
       <motion.h2
-        className="font-heading text-section text-center mb-20"
+        className="font-heading text-section text-center mb-12 sm:mb-20"
         initial={{ opacity: 0, y: 30 }}
         animate={isInView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
@@ -102,7 +102,7 @@ export function TrustSection() {
 
       {/* Trust badges */}
       <motion.div
-        className="flex items-center justify-center gap-8 mt-16 opacity-40 hover:opacity-70 transition-opacity duration-500"
+        className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 mt-12 sm:mt-16 opacity-40 hover:opacity-70 transition-opacity duration-500"
         initial={{ opacity: 0 }}
         animate={isInView ? { opacity: 0.4 } : {}}
         transition={{ duration: 0.6, delay: 0.5 }}

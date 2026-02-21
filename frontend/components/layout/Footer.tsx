@@ -45,7 +45,7 @@ export function Footer() {
             Create Vault
           </Link>
           <a
-            href="https://github.com"
+            href="https://github.com/Dikshant-Neupane/LegacyX"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-vault-muted hover:text-vault-text transition-colors"

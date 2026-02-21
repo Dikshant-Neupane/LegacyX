@@ -3,61 +3,78 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } },
+};
+
 const stats = [
-  { number: '70', suffix: '%', text: 'of digital assets are lost forever when someone dies.' },
-  { number: '1', suffix: ' in 3', text: 'Your deepfake exists right now. You cannot prove it is not you.' },
-  { number: '0', suffix: '', text: 'Your final words exist only inside your head.' },
+  { value: '$20B+', label: 'in crypto lost forever due to inaccessible wallets' },
+  { value: '89%', label: 'of crypto holders have no digital succession plan' },
+  { value: '4M+', label: 'Bitcoin wallets presumed permanently lost' },
 ];
 
-function StatBlock({ stat, index }: { stat: typeof stats[0]; index: number }) {
+export function ProblemSection() {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-20%' });
+  const isInView = useInView(ref, { once: true, margin: '-10%' });
 
   return (
-    <div ref={ref} className="flex flex-col items-center justify-center min-h-[60vh] px-6">
-      {/* Large number with morph animation */}
+    <section ref={ref} className="py-24 sm:py-32 px-6 max-w-5xl mx-auto">
+      {/* Section title */}
       <motion.div
-        className="font-display text-[120px] md:text-[180px] text-vault-gold leading-none mb-6 relative"
-        initial={{ opacity: 0, scale: 0.8, filter: 'blur(8px)' }}
-        animate={isInView ? { opacity: 1, scale: 1, filter: 'blur(0px)' } : {}}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        className="text-center mb-16"
+        initial="hidden"
+        animate={isInView ? 'visible' : 'hidden'}
+        variants={fadeUp}
       >
-        {stat.number}
-        <span className="text-[60px] md:text-[90px]">{stat.suffix}</span>
-        {/* Gold glow behind number */}
-        <div className="absolute inset-0 blur-[60px] bg-vault-gold/10 rounded-full pointer-events-none" />
+        <span className="font-mono text-xs text-vault-gold uppercase tracking-[0.25em] mb-4 block">
+          The Problem
+        </span>
+        <h2 className="font-heading text-section mb-6">
+          When you die, your digital life{' '}
+          <span className="text-vault-gold">dies with you.</span>
+        </h2>
+        <p className="font-body text-vault-muted text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+          Your crypto wallet keys, passwords, private documents, and family records
+          become permanently inaccessible. Your loved ones inherit nothing —
+          not because you didn&apos;t plan, but because <em>no tool existed</em> to do it trustlessly on-chain.
+        </p>
       </motion.div>
 
-      {/* Description text */}
-      <motion.p
-        className="font-body text-lg md:text-xl text-vault-muted max-w-md text-center"
-        initial={{ opacity: 0, y: 20 }}
-        animate={isInView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      {/* Stats */}
+      <motion.div
+        className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 mb-16"
+        initial="hidden"
+        animate={isInView ? 'visible' : 'hidden'}
+        variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
       >
-        {stat.text}
-      </motion.p>
+        {stats.map((stat, i) => (
+          <motion.div
+            key={i}
+            className="vault-card text-center p-6 sm:p-8"
+            variants={fadeUp}
+          >
+            <div className="font-display text-3xl sm:text-4xl text-vault-gold mb-2">{stat.value}</div>
+            <p className="text-vault-muted text-sm">{stat.label}</p>
+          </motion.div>
+        ))}
+      </motion.div>
 
-      {/* Gold divider line */}
-      {index < stats.length - 1 && (
-        <motion.div
-          className="w-full max-w-xs h-px mt-16"
-          style={{ background: 'linear-gradient(90deg, transparent, #C9A96E, transparent)' }}
-          initial={{ scaleX: 0, opacity: 0 }}
-          animate={isInView ? { scaleX: 1, opacity: 0.4 } : {}}
-          transition={{ duration: 1, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        />
-      )}
-    </div>
-  );
-}
-
-export function ProblemSection() {
-  return (
-    <section className="py-20">
-      {stats.map((stat, i) => (
-        <StatBlock key={i} stat={stat} index={i} />
-      ))}
+      {/* Emotional hook */}
+      <motion.blockquote
+        className="text-center border-l-2 border-vault-gold pl-6 py-2 max-w-xl mx-auto"
+        initial="hidden"
+        animate={isInView ? 'visible' : 'hidden'}
+        variants={fadeUp}
+      >
+        <p className="font-body text-vault-muted italic text-base leading-relaxed">
+          &ldquo;What happens to your family&apos;s financial access, your crypto holdings,
+          and your most private documents when you can no longer log in?&rdquo;
+        </p>
+        <footer className="mt-3 text-xs text-vault-gold font-mono">
+          LegacyX solves this — trustlessly, on Solana.
+        </footer>
+      </motion.blockquote>
     </section>
   );
 }

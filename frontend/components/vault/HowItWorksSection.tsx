@@ -71,9 +71,9 @@ export function HowItWorksSection() {
   const isInView = useInView(ref, { once: true, margin: '-10%' });
 
   return (
-    <section ref={ref} id="how-it-works" className="py-32 px-6 max-w-7xl mx-auto">
+    <section ref={ref} id="how-it-works" className="py-24 sm:py-32 px-4 sm:px-6 max-w-7xl mx-auto">
       <motion.h2
-        className="font-heading text-section text-center mb-20"
+        className="font-heading text-section text-center mb-12 sm:mb-20"
         initial={{ opacity: 0, y: 30 }}
         animate={isInView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
@@ -103,7 +103,7 @@ export function HowItWorksSection() {
           >
             {/* Step number + icon */}
             <div className="relative mb-8">
-              <span className="font-heading text-[64px] text-vault-gold leading-none transition-transform duration-300 group-hover:scale-110 inline-block">
+              <span className="font-heading text-[48px] sm:text-[64px] text-vault-gold leading-none transition-transform duration-300 group-hover:scale-110 inline-block">
                 {step.number}
               </span>
               {/* Animated icon beneath number */}

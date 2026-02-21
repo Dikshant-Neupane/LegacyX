@@ -142,7 +142,7 @@ export default function DashboardPage() {
 
   // ─── Dashboard (Overview Hub) ─────────────────────────────────────────
   return (
-    <div className="min-h-screen pt-24 pb-16 px-6">
+    <div className="min-h-screen pt-24 pb-16 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
         {/* Toast */}
         {txStatus && (
@@ -164,7 +164,7 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="vault-card p-8 mb-8 relative overflow-hidden"
+          className="vault-card p-6 sm:p-8 mb-6 sm:mb-8 relative overflow-hidden"
         >
           {/* Decorative gradient */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-vault-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />

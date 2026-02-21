@@ -196,10 +196,10 @@ export default function CreateVaultPage() {
   // â”€â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-20">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 py-16 sm:py-20">
       <div className="w-full max-w-lg">
         {/* Step indicator */}
-        <div className="flex items-center justify-center gap-2 mb-12">
+        <div className="flex items-center justify-center gap-2 mb-4">
           {STEPS.map((step, i) => (
             <div key={i} className="flex items-center gap-2">
               <div
@@ -229,7 +229,10 @@ export default function CreateVaultPage() {
             </div>
           ))}
         </div>
-
+        {/* Step label */}
+        <p className="text-center text-xs text-vault-muted font-mono mb-10">
+          Step {currentStep + 1} of {STEPS.length} — {STEPS[currentStep]}
+        </p>
         {/* Step content */}
         <AnimatePresence mode="wait">
           {/* STEP 0: Connect Wallet */}
@@ -241,9 +244,12 @@ export default function CreateVaultPage() {
               exit={{ opacity: 0, y: -20 }}
               className="text-center"
             >
-              <h2 className="font-display text-3xl mb-4">Connect Your Wallet</h2>
-              <p className="text-vault-muted mb-8">
+              <h2 className="font-display text-2xl sm:text-3xl mb-4">Connect Your Wallet</h2>
+              <p className="text-vault-muted mb-2">
                 Your Phantom wallet is your key to the vault. No email, no password.
+              </p>
+              <p className="text-vault-muted/60 text-xs mb-8">
+                Don&apos;t have Phantom? <a href="https://phantom.app" target="_blank" rel="noopener noreferrer" className="text-vault-gold underline">Download it here</a> — it takes 30 seconds.
               </p>
               <ConnectWalletButton />
             </motion.div>
@@ -259,9 +265,12 @@ export default function CreateVaultPage() {
               className="space-y-8"
             >
               <div className="text-center">
-                <h2 className="font-display text-3xl mb-2">Name Your Vault</h2>
+                <h2 className="font-display text-2xl sm:text-3xl mb-2">Name Your Vault</h2>
                 <p className="text-vault-muted text-sm">
-                  Give it a name and choose your check-in frequency.
+                  Give it a name and choose how often you want to check in.
+                </p>
+                <p className="text-vault-muted/60 text-xs mt-1">
+                  The check-in timer is your dead man&apos;s switch — miss it, and your beneficiary gets access.
                 </p>
               </div>
 
@@ -331,9 +340,12 @@ export default function CreateVaultPage() {
               className="space-y-8"
             >
               <div className="text-center">
-                <h2 className="font-display text-3xl mb-2">Set Beneficiary</h2>
+                <h2 className="font-display text-2xl sm:text-3xl mb-2">Set Beneficiary</h2>
                 <p className="text-vault-muted text-sm">
                   Who should receive access to your vault if the dead man&apos;s switch activates?
+                </p>
+                <p className="text-vault-muted/60 text-xs mt-1">
+                  This is optional — you can always add or change it later from the dashboard.
                 </p>
               </div>
 
