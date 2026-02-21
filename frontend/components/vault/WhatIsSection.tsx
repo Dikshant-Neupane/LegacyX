@@ -20,7 +20,7 @@ const features = [
     icon: '📡',
   },
   {
-    title: 'Soul Wallet',
+    title: 'Legacy Wallet',
     description: 'Your memory and voice preserved. Your bloodline holds the key.',
     icon: '🧬',
   },

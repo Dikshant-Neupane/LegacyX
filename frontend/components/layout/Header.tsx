@@ -21,7 +21,7 @@ export function Header() {
           className="font-display font-bold text-xl text-vault-text tracking-tight hover:text-vault-gold transition-colors"
           onClick={() => setMobileOpen(false)}
         >
-          Soul<span className="text-vault-gold">Vault</span>
+          Legacy<span className="text-vault-gold">X</span>
         </Link>
 
         {/* Desktop Navigation */}

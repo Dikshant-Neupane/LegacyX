@@ -16,7 +16,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Wordmark */}
         <span className="font-display font-bold text-vault-text">
-          Soul<span className="text-vault-gold">Vault</span>
+          Legacy<span className="text-vault-gold">X</span>
         </span>
 
         {/* Navigation */}
